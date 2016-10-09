@@ -13,7 +13,7 @@ class TriangularKernel(Kernel):
     def value(self, centerPoint, seekedPoint):
         if abs(centerPoint - seekedPoint) < (self.bandwidth / 2):
             # Thales !!!!
-            return 4 / (self.bandwidth*self.bandwidth) * abs(centerPoint - seekedPoint)
+            return 2/self._bandwidth - 4*abs(centerPoint - seekedPoint)/(self._bandwidth*self.bandwidth)
         else:
             # Pas dans le Kernel
             return 0
