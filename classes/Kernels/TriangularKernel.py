@@ -7,7 +7,7 @@ class TriangularKernel(Kernel):
 
     # Constructeur de classe
     def __init__(self, h = 1):
-        super().__init__(h)
+        super().__init__(h)     #super() -> pour appeler le parent
         self._name = "Kernel Triangulaire"
 
     def value(self, centerPoint, seekedPoint):
