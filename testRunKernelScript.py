@@ -54,7 +54,20 @@ for x in defDomain:
 
     tKernel = TriangularKernel(hTest)
 
-plt.plot(defDomain, yOnDomain)
-plt.plot(defDomain, yHMinOnDomain)
-plt.plot(defDomain, yHMaxOnDomain)
+plt.figure(figsize=(10,8))
+
+"""Histogramme pour voir la tête de la répartition"""
+hist, bins = np.histogram(sample, bins=15)
+width = 0.7 * (bins[1] - bins[0])
+center = (bins[:-1] + bins[1:]) / 2
+plt.subplot(223)
+barlist = plt.bar(center, hist, align='center', width=width)
+for bar in barlist:
+    bar.set_color('y')
+
+plt.plot(defDomain, yOnDomain, label="Brute Force")
+plt.plot(defDomain, yHMinOnDomain, label="HMin")
+plt.plot(defDomain, yHMaxOnDomain, label="HMax")
+plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+plt.gca().set_position([0, 0, 0.8, 0.8])
 plt.show()
