@@ -20,17 +20,18 @@ for x in defDomain:
     gx = 0
     hx = 0
     hMinTri=0
-    hMaxTri=0
+    hMaxTri=hTestTri
 
     for j in sample:
         fx += tKernelTri.value(x,j)
 
         """On met dans les hMin les point les plus loin de x et appartenant à [x-hTest/2 ; x+hTest/2]"""
-        if (tKernelTri.value(x,j)!=0 and abs(x-j)>hMinTri): hMinTri=abs(x-j)
+        if (tKernelTri.value(j,x)!=0 and abs(x-j)>hMinTri): hMinTri=2*abs(x-j)
 
         """On met dans les hMax la distance entre x et le premier point en dehors de notre intervalle [x-hTest/2 ; x+hTest/2] puis on lui retranche un nombre petit correspondant à 10^-precis, on def precis auparavant"""
-        if (tKernelTri.value(x, j) == 0 and abs(x - j) < hMaxTri): hMaxTri = abs(x - j)
+        if (tKernelTri.value(j, x) == 0 and abs(x - j) < hMaxTri): hMaxTri = 2*abs(x - j)
     yTriOnDomain.append(fx)
+    print(str(hMinTri) + " / " + str(hMaxTri))
 
     """Ici on passe aux Kernel avec un h minimal pour le point x dans le domaine de definition"""
 
@@ -43,7 +44,9 @@ for x in defDomain:
     """Ici on passe aux Kernel avec un h maximal pour le point x dans le domaine de definition
     -> le - 10^-precis evite d'être sur le premier point en dehors de notre interval initial"""
 
-    tKernelTri = TriangularKernel(hMaxTri-10^-precis)
+    hMaxTri -= 10^-precis
+
+    tKernelTri = TriangularKernel(hMaxTri)
 
     for j in sample:
         hx += tKernelTri.value(x, j)

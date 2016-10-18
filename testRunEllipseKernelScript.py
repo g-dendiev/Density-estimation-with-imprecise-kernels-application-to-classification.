@@ -23,17 +23,18 @@ for x in defDomain:
     bx = 0
     cx = 0
     hMinEll=0
-    hMaxEll=0
+    hMaxEll=hTestEll
 
     for j in sample:
         ax += tKernelEll.value(x,j)
 
         """On met dans les hMin les point les plus loin de x et appartenant à [x-hTest/2 ; x+hTest/2]"""
-        if (tKernelEll.value(x, j) != 0 and abs(x - j) > hMinEll): hMinEll = abs(x - j)
+        if (tKernelEll.value(j, x) != 0 and abs(x - j) > hMinEll): hMinEll = 2*abs(x - j)
 
         """On met dans les hMax la distance entre x et le premier point en dehors de notre intervalle [x-hTest/2 ; x+hTest/2] puis on lui retranche un nombre petit correspondant à 10^-precis, on def precis auparavant"""
-        if (tKernelEll.value(x, j) == 0 and abs(x - j) < hMaxEll): hMaxEll = abs(x - j)
+        if (tKernelEll.value(j, x) == 0 and abs(x - j) < hMaxEll): hMaxEll = 2*abs(x - j)
     yEllOnDomain.append(ax)
+    print(str(hMinEll) + " / " + str(hMaxEll))
 
     """Ici on passe aux Kernel avec un h minimal pour le point x dans le domaine de definition"""
 
@@ -46,7 +47,9 @@ for x in defDomain:
     """Ici on passe aux Kernel avec un h maximal pour le point x dans le domaine de definition
     -> le - 10^-precis evite d'être sur le premier point en dehors de notre interval initial"""
 
-    tKernelEll = EllipseKernel(hMaxEll - 10 ^ -precis)
+    hMaxEll -= 10 ^ -precis
+
+    tKernelEll = EllipseKernel(hMaxEll)
 
     for j in sample:
         cx += tKernelEll.value(x, j)
