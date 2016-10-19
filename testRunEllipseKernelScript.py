@@ -1,6 +1,9 @@
 import matplotlib.pylab as plt
 import numpy as np
 
+from statistics import stdev
+from statistics import variance
+
 from classes.Kernels.EllipseKernel import EllipseKernel
 from classes.SampleGenerator.MultimodalGenerator import MultimodalGenerator
 
@@ -16,6 +19,7 @@ defDomain = np.linspace(-4,12,200)
 yEllOnDomain = []
 yEllHMinOnDomain = []
 yEllHMaxOnDomain = []
+ecartH=[]
 
 for x in defDomain:
 
@@ -23,16 +27,16 @@ for x in defDomain:
     bx = 0
     cx = 0
     hMinEll=0
-    hMaxEll=hTestEll
+    hMaxEll=2*hTestEll
 
     for j in sample:
         ax += tKernelEll.value(x,j)
 
         """On met dans les hMin les point les plus loin de x et appartenant à [x-hTest/2 ; x+hTest/2]"""
-        if (tKernelEll.value(j, x) != 0 and abs(x - j) > hMinEll): hMinEll = 2*abs(x - j)
+        if (tKernelEll.value(j, x) != 0 and abs(x - j) > hMinEll/2): hMinEll = 2*abs(x - j)
 
         """On met dans les hMax la distance entre x et le premier point en dehors de notre intervalle [x-hTest/2 ; x+hTest/2] puis on lui retranche un nombre petit correspondant à 10^-precis, on def precis auparavant"""
-        if (tKernelEll.value(j, x) == 0 and abs(x - j) < hMaxEll): hMaxEll = 2*abs(x - j)
+        if (tKernelEll.value(j, x) == 0 and abs(x - j) < hMaxEll/2): hMaxEll = 2*abs(x - j)
     yEllOnDomain.append(ax)
     print(str(hMinEll) + " / " + str(hMaxEll))
 
@@ -48,6 +52,10 @@ for x in defDomain:
     -> le - 10^-precis evite d'être sur le premier point en dehors de notre interval initial"""
 
     hMaxEll -= 10 ^ -precis
+
+    ecart = hMaxEll - hMinEll
+
+    ecartH.append(ecart)
 
     tKernelEll = EllipseKernel(hMaxEll)
 
@@ -69,6 +77,10 @@ plt.subplot(223)
 barlist = plt.bar(center, hist, align='center', width=width)
 for bar in barlist:
     bar.set_color('y')
+
+
+print(ecartH)
+print(" moyenne ecart hMax - hMin :   " + str(stdev(ecartH)) + "    variance : " + str(variance(ecartH)))
 
 plt.plot(defDomain, yEllOnDomain, label="Brute Force Ell")
 plt.plot(defDomain, yEllHMinOnDomain, label="EllHMin")

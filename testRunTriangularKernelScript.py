@@ -1,10 +1,13 @@
 import matplotlib.pylab as plt
 import numpy as np
 
+from statistics import stdev
+from statistics import variance
+
 from classes.Kernels.TriangularKernel import TriangularKernel
 from classes.SampleGenerator.MultimodalGenerator import MultimodalGenerator
 
-hTestTri = 3
+hTestTri = 2
 """valeur qui nous permet d'être proche à 10^-precis près du premier point en dehors de [x-hTest/2 ; x+hTest/2]"""
 precis = 6
 sample = MultimodalGenerator([(100,-1,1),(400,5,2)]).generateNormalSamples()
@@ -13,6 +16,8 @@ defDomain = np.linspace(-4,12,200)
 yTriOnDomain = []
 yTriHMinOnDomain = []
 yTriHMaxOnDomain = []
+ecartH=[]
+
 
 for x in defDomain:
 
@@ -20,18 +25,25 @@ for x in defDomain:
     gx = 0
     hx = 0
     hMinTri=0
-    hMaxTri=hTestTri
+    hMaxTri=2*hTestTri
+    ecart=0
+
 
     for j in sample:
         fx += tKernelTri.value(x,j)
 
         """On met dans les hMin les point les plus loin de x et appartenant à [x-hTest/2 ; x+hTest/2]"""
-        if (tKernelTri.value(j,x)!=0 and abs(x-j)>hMinTri): hMinTri=2*abs(x-j)
+        if (tKernelTri.value(j, x)!=0 and abs(x-j)>hMinTri/2): hMinTri=2*abs(x-j)
 
         """On met dans les hMax la distance entre x et le premier point en dehors de notre intervalle [x-hTest/2 ; x+hTest/2] puis on lui retranche un nombre petit correspondant à 10^-precis, on def precis auparavant"""
-        if (tKernelTri.value(j, x) == 0 and abs(x - j) < hMaxTri): hMaxTri = 2*abs(x - j)
+        if (tKernelTri.value(j, x) == 0 and abs(x - j) < hMaxTri/2): hMaxTri = 2*abs(x - j)
+
+
     yTriOnDomain.append(fx)
     print(str(hMinTri) + " / " + str(hMaxTri))
+    ecart = hMaxTri - hMinTri
+
+
 
     """Ici on passe aux Kernel avec un h minimal pour le point x dans le domaine de definition"""
 
@@ -45,6 +57,10 @@ for x in defDomain:
     -> le - 10^-precis evite d'être sur le premier point en dehors de notre interval initial"""
 
     hMaxTri -= 10^-precis
+
+
+
+    ecartH.append(ecart)
 
     tKernelTri = TriangularKernel(hMaxTri)
 
@@ -66,6 +82,9 @@ plt.subplot(223)
 barlist = plt.bar(center, hist, align='center', width=width)
 for bar in barlist:
     bar.set_color('y')
+
+print(ecartH)
+print(" moyenne ecart hMax - hMin :   " + str(stdev(ecartH)) + "    variance : " + str(variance(ecartH)))
 
 plt.plot(defDomain, yTriOnDomain, label="Brute Force Tri")
 plt.plot(defDomain, yTriHMinOnDomain, label="TriHMin")
