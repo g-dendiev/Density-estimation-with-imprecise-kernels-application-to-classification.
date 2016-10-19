@@ -51,9 +51,12 @@ for x in defDomain:
     """Ici on passe aux Kernel avec un h maximal pour le point x dans le domaine de definition
     -> le - 10^-precis evite d'être sur le premier point en dehors de notre interval initial"""
 
-    hMaxEll -= 10 ^ -precis
+     #le 10^precis ca fout la merde je sais pas pourquoi
+    hMaxEll -= 0.0000001
+
 
     ecart = hMaxEll - hMinEll
+
 
     ecartH.append(ecart)
 

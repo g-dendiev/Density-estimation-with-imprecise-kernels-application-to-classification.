@@ -40,8 +40,8 @@ for x in defDomain:
 
 
     yTriOnDomain.append(fx)
-    print(str(hMinTri) + " / " + str(hMaxTri))
-    ecart = hMaxTri - hMinTri
+    #print(str(hMinTri) + " / " + str(hMaxTri))
+    #ecart = hMaxTri - hMinTri
 
 
 
@@ -56,9 +56,9 @@ for x in defDomain:
     """Ici on passe aux Kernel avec un h maximal pour le point x dans le domaine de definition
     -> le - 10^-precis evite d'être sur le premier point en dehors de notre interval initial"""
 
-    hMaxTri -= 10^-precis
+    hMaxTri -= 0.0000001
 
-
+    ecart = hMaxTri - hMinTri
 
     ecartH.append(ecart)
 
