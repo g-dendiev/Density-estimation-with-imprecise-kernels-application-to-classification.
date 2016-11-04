@@ -58,9 +58,8 @@ for x in defDomain:
 
     hMaxTri -= 0.0000001
 
-    ecart = hMaxTri - hMinTri
 
-    ecartH.append(ecart)
+    ecartH.append(hMaxTri - hMinTri)
 
     tKernelTri = TriangularKernel(hMaxTri)
 
