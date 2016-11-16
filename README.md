@@ -45,4 +45,3 @@ il faut que nous trouvions un intervalle [hMin, hMax] tel que :
 Notre travail consiste donc à essayer de maximiser ce hMin et de minimiser ce hMax, afin de limiter l'étude du signal dans
 l'intervalle [hMin, hMax] et ainsi gagner du temps en évitant de balayer un ensemble trop large de valeurs de h, tout en
 garantissant le fait que le hOpt pour la fonction f (inconnue) appartienne à cet intervalle.
-
