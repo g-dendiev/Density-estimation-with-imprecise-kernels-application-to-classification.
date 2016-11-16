@@ -81,7 +81,7 @@ De ce fait :
     ° Pour donner une borne supérieure à notre hMax, une idée pourrait être de conserver une hauteur centrale minimale.
     Pour le Kernel triangulaire : la hauteur du triangle vaut 2/hMax, et donc en imposant une hauteur minimale (une valeur
     donnée en parametre ou une constante petite de base, si aucun parametre n'est donné), on impose une borne sup à hMax.
-    Ainsi : hMax<= 2/Hauteur_minimale_souhaitée.
+    Ainsi : hMax<= 2/Hauteur_minimale_souhaitée (pour le Kernel Triangulaire).
     ° Ce hMax pourrait rester trop grand. Une idée pourrait être d'étudier l'écart entre n pas (donné en parametre) du
     max(f(hMax)) et min(f(hMin)). Si sur ces n pas : |max(f(hMin)) - min(f(hMin))| < borne_donnee_en_parametre,
     alors on diminue la borne supérieure de hMax d'un epsilon (donné en parametre).
