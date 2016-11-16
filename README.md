@@ -44,4 +44,44 @@ il faut que nous trouvions un intervalle [hMin, hMax] tel que :
 
 Notre travail consiste donc à essayer de maximiser ce hMin et de minimiser ce hMax, afin de limiter l'étude du signal dans
 l'intervalle [hMin, hMax] et ainsi gagner du temps en évitant de balayer un ensemble trop large de valeurs de h, tout en
-garantissant le fait que le hOpt pour la fonction f (inconnue) appartienne à cet intervalle.
+garantissant le fait que le hOpt pour la fonction f, qui est inconnue, appartienne à cet intervalle.
+
+
+############################################################################################
+
+Retour sur les Tests du Kernel Triangulaire :
+
+- hMin :
+
+Quand hMin tend vers 0, on obtient des résultats "en pic", et plus on s'approche de 0 plus on a de résultats nuls pour
+f(hMin).
+En effet on a un triangle avec une hauteur très grande afin de conserver une aire valant 1. C'est logique car note base
+dépend de h et notre hauteur de 1/h donc quand h tend vers 0 on obtient des hauteurs qui tendent vers l'infini.
+De ce fait :
+
+    ° Pour donner une borne inférieure à hMin, une idée pourrait être d'étudier l'écart entre le max(f(hMin)) et le
+    min(f(hMin), et ce sur un nombre de points successifs restreints (à donner en parametre). En effet l'idée serait de
+    voir a quel point l'écart est grand. Si |max(f(hMin)) - min(f(hMin))| > borne_donnee_en_parametre, alors on a un h
+    trop petit et on réhausse la borne inférieure de hMin d'un epsilon (donné en parametre).
+
+    ° Il faut également tester le fait que f(hMin)=0 sur un intervalle d'étude de plusieurs points (intervalle à donner
+    en parametre). Si on voit que f(hMin)=0 sur un intervalle trop grand, une fois encore on va augmenter la borne
+    inférieure de hMin pour notre étude d'un epsilon (donné en parametre).
+
+- hMax :
+
+Quand hMax tends vers l'infini, le rendu f(hMax) est une courbe "lissée et applatie". C'est normal car notre triangle à une
+base très grande (hMax) et donc la hauteur du triangle (2/hMax) tend vers 0. Si hMax est vriament très grand et englobe
+l'ensemble de définition, alors on a un f(hMax) valant une constante liée à la pondération de chaque point et de la
+hauteur de notre triangle.
+Pour le Kernel triangulaire, pour le Kernel ellipsoidal également (voir pour les autres mais ça doit être un fait général),
+à chaque fois la mesure est faite de la manière suivante : pour un point du signal entrant, on mesure en ce point la
+hauteur entre ce point et la borne la plus proche (perpendiculairement donc) de figure en fonction du Kernel utilisé.
+De ce fait :
+    ° Pour donner une borne supérieure à notre hMax, une idée pourrait être de conserver une hauteur centrale minimale.
+    Pour le Kernel triangulaire : la hauteur du triangle vaut 2/hMax, et donc en imposant une hauteur minimale (une valeur
+    donnée en parametre ou une constante petite de base, si aucun parametre n'est donné), on impose une borne sup à hMax.
+    Ainsi : hMax<= 2/Hauteur_minimale_souhaitée.
+    ° Ce hMax pourrait rester trop grand. Une idée pourrait être d'étudier l'écart entre n pas (donné en parametre) du
+    max(f(hMax)) et min(f(hMin)). Si sur ces n pas : |max(f(hMin)) - min(f(hMin))| < borne_donnee_en_parametre,
+    alors on diminue la borne supérieure de hMax d'un epsilon (donné en parametre).

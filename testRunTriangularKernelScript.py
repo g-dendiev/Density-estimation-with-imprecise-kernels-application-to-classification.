@@ -7,7 +7,7 @@ from statistics import variance
 from classes.Kernels.TriangularKernel import TriangularKernel
 from classes.SampleGenerator.MultimodalGenerator import MultimodalGenerator
 
-hTestTri = 2
+hTestTri = 4
 """valeur qui nous permet d'être proche à 10^-precis près du premier point en dehors de [x-hTest/2 ; x+hTest/2]"""
 precis = 6
 sample = MultimodalGenerator([(100,-1,1),(400,5,2)]).generateNormalSamples()
@@ -24,20 +24,19 @@ for x in defDomain:
     fx = 0
     gx = 0
     hx = 0
-    hMinTri=0
+    hMinTri=hTestTri
     hMaxTri=2*hTestTri
     ecart=0
 
-
+    """
     for j in sample:
         fx += tKernelTri.value(x,j)
-
-        """On met dans les hMin les point les plus loin de x et appartenant à [x-hTest/2 ; x+hTest/2]"""
+        #On met dans les hMin les point les plus loin de x et appartenant à [x-hTest/2 ; x+hTest/2]
         if (tKernelTri.value(j, x)!=0 and abs(x-j)>hMinTri/2): hMinTri=2*abs(x-j)
 
-        """On met dans les hMax la distance entre x et le premier point en dehors de notre intervalle [x-hTest/2 ; x+hTest/2] puis on lui retranche un nombre petit correspondant à 10^-precis, on def precis auparavant"""
+       # On met dans les hMax la distance entre x et le premier point en dehors de notre intervalle [x-hTest/2 ; x+hTest/2] puis on lui retranche un nombre petit correspondant à 10^-precis, on def precis auparavant
         if (tKernelTri.value(j, x) == 0 and abs(x - j) < hMaxTri/2): hMaxTri = 2*abs(x - j)
-
+    """
 
     yTriOnDomain.append(fx)
     #print(str(hMinTri) + " / " + str(hMaxTri))
@@ -83,7 +82,7 @@ for bar in barlist:
     bar.set_color('y')
 
 print(ecartH)
-print(" moyenne ecart hMax - hMin :   " + str(stdev(ecartH)) + "    variance : " + str(variance(ecartH)))
+#print(" moyenne ecart hMax - hMin :   " + str(stdev(ecartH)) + "    variance : " + str(variance(ecartH)))
 
 plt.plot(defDomain, yTriOnDomain, label="Brute Force Tri")
 plt.plot(defDomain, yTriHMinOnDomain, label="TriHMin")
