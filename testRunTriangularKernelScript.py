@@ -7,26 +7,38 @@ from statistics import variance
 from classes.Kernels.TriangularKernel import TriangularKernel
 from classes.SampleGenerator.MultimodalGenerator import MultimodalGenerator
 
-hTestTri = 4
-"""valeur qui nous permet d'être proche à 10^-precis près du premier point en dehors de [x-hTest/2 ; x+hTest/2]"""
-precis = 6
+hMinTri = 0.01
+hMaxTri = 100
+"""valeurs de départ telles que hOpt appartient à [hMinTri,hMaxTri]"""
+epsilonH = 0.1 #ici c'est juste pour tester la valeur de epsilon est arbitraire
+"""pointsSuccessifs = 3 #test pour les max et min des f(hMin) et f(hMax) pour voir si on doit ajouter/soustraire epsilon"""
 sample = MultimodalGenerator([(100,-1,1),(400,5,2)]).generateNormalSamples()
-tKernelTri = TriangularKernel(hTestTri)
+#tKernelTri = TriangularKernel(hTestTri)
 defDomain = np.linspace(-4,12,200)
 yTriOnDomain = []
 yTriHMinOnDomain = []
 yTriHMaxOnDomain = []
 ecartH=[]
+borne = 12
+compteur = 0
+compteurZero = 0
+
+"""Var pour avoir l'écart entre 2 points successifs"""
+gx_moins_1 = 0
+hx_moins_1 = 0
 
 
 for x in defDomain:
 
+    if (compteur >= 1):
+        # on sauv les anciennes vameur de gx et hx
+        gx_moins_1 = gx
+        hx_moins_1 = hx
+
     fx = 0
     gx = 0
     hx = 0
-    hMinTri=hTestTri
-    hMaxTri=2*hTestTri
-    ecart=0
+    compteur += 1
 
     """
     for j in sample:
@@ -38,7 +50,7 @@ for x in defDomain:
         if (tKernelTri.value(j, x) == 0 and abs(x - j) < hMaxTri/2): hMaxTri = 2*abs(x - j)
     """
 
-    yTriOnDomain.append(fx)
+    #yTriOnDomain.append(fx)
     #print(str(hMinTri) + " / " + str(hMaxTri))
     #ecart = hMaxTri - hMinTri
 
@@ -48,17 +60,24 @@ for x in defDomain:
 
     tKernelTri = TriangularKernel(hMinTri)
 
+
     for j in sample:
         gx += tKernelTri.value(x,j)
     yTriHMinOnDomain.append(gx)
 
+    if ((gx - gx_moins_1) > borne):
+        hMinTri += epsilonH
+        print("on a changé h min")
+
+
+
+
     """Ici on passe aux Kernel avec un h maximal pour le point x dans le domaine de definition
     -> le - 10^-precis evite d'être sur le premier point en dehors de notre interval initial"""
 
-    hMaxTri -= 0.0000001
 
 
-    ecartH.append(hMaxTri - hMinTri)
+    #ecartH.append(hMaxTri - hMinTri)
 
     tKernelTri = TriangularKernel(hMaxTri)
 
@@ -66,9 +85,19 @@ for x in defDomain:
         hx += tKernelTri.value(x, j)
     yTriHMaxOnDomain.append(hx)
 
+
+
+    """code ci-dessous à revoir"""
+
+    """if ((hx - hx_moins_1) < 0.1):
+
+        hMaxTri -= epsilonH
+        compteurZero=0
+        print("on a changé h max")"""
+
     """Retour aux Kernel avec les hTest défini initialement"""
 
-    tKernelTri = TriangularKernel(hTestTri)
+    #tKernelTri = TriangularKernel(hTestTri)
 
 plt.figure(figsize=(10,8))
 
@@ -84,7 +113,7 @@ for bar in barlist:
 print(ecartH)
 #print(" moyenne ecart hMax - hMin :   " + str(stdev(ecartH)) + "    variance : " + str(variance(ecartH)))
 
-plt.plot(defDomain, yTriOnDomain, label="Brute Force Tri")
+#plt.plot(defDomain, yTriOnDomain, label="Brute Force Tri")
 plt.plot(defDomain, yTriHMinOnDomain, label="TriHMin")
 plt.plot(defDomain, yTriHMaxOnDomain, label="TriHMax")
 plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
