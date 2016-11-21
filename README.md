@@ -122,7 +122,7 @@ et que nous pourront simuler afin de voir par la suite si il existe des epsilon 
 Nos tests ont été réalisés avec le Kernel triangulaire, ainsi on parle de hauteur max ou min, en parlant de la hauteur
 du triangle dont la base est positionnée sur l'axe des abcisses.
 
-Dans le cadre de l'application d'autres Kernel où la figure (triangle, ellipse,...) est symétique, la hauteur correspond
+Dans le cadre de l'application d'autres Kernel où la figure (triangle, ellipse,...) est symétrique, la hauteur correspond
 à l'écart entre l'axe des abcisses et le point au milieu du Kernel.
 
 Nous avons pour l'instant étudié le cas du Kernel Triangulaire qui ne fait pas intervenir d'autres parametres que notre
