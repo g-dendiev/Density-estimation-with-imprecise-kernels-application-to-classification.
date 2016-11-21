@@ -10,7 +10,7 @@ hMaxTri = 100
 
 """ici c'est juste pour tester : la valeur de epsilon, borne est arbitraire, il faudra les optimiser"""
 epsilonHMin = 0.05
-epsilonHMax = 10
+epsilonHMax = 2
 ecartMax = 10
 diffMin = 0.01
 
@@ -119,7 +119,7 @@ barlist = plt.bar(center, hist, align='center', width=width)
 for bar in barlist:
     bar.set_color('y')
 
-print(hMinTri, hMaxTri)
+print(round(hMinTri,3), hMaxTri)
 plt.plot(defDomain, yTriHMinOnDomain, label="TriHMin")
 plt.plot(defDomain, yTriHMaxOnDomain, label="TriHMax")
 plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
