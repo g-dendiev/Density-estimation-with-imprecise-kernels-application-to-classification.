@@ -5,7 +5,7 @@ import random
 from classes.Kernels.TriangularKernel import TriangularKernel
 from classes.Extremizer.Extremizer import Extremizer
 
-SEED = 157 #598473 # SUPER SEED ICI 157  #47 #53 # 23
+SEED = 1245632214124 #598473 # SUPER SEED ICI 157  #47 #53 # 23
 random.seed(SEED)
 experimentalSample = []
 centerPoint = 5
@@ -22,6 +22,7 @@ tKernel2 = TriangularKernel(0.1)
 dist2 = []
 extremizer = Extremizer(experimentalSample, centerPoint, tKernel2)
 maxStruct = extremizer.computeHMax()
+
 
 distances = []
 for ind,i in enumerate(experimentalSample):
@@ -45,8 +46,6 @@ for ind,i in enumerate(hDomain):
     hX.append(0)
     for j in experimentalSample:
         hX[ind] += tKernel.value(centerPoint, j)
-
-print(max(hX))
 
 plt.plot(hDomain, hX)
 plt.show()
