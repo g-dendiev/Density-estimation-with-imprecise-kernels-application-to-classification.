@@ -11,6 +11,10 @@ git commit -m « message pour l’autre à laisser »
 
 git push
 
+###########################################################################################
+
+Sources à voir : https://jakevdp.github.io/blog/2013/12/01/kernel-density-estimation/
+
 
 ###########################################################################################
 
