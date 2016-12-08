@@ -3,36 +3,40 @@ import numpy as np
 import random
 
 from classes.Kernels.TriangularKernel import TriangularKernel
+from classes.Extremizer.Extremizer import Extremizer
 
-SEED = 53 # 23
+SEED = 157 #598473 # SUPER SEED ICI 157  #47 #53 # 23
 random.seed(SEED)
 experimentalSample = []
-for i in range(0,10):
-    experimentalSample.append(random.randint(0,20))
-
-tentativeDesesperee = sum(experimentalSample)/len(experimentalSample)
-experimentalSample = sorted(experimentalSample)
-print(experimentalSample)
 centerPoint = 5
-print(abs(tentativeDesesperee-centerPoint)*4)
-hMin = 1000000
-hMax = 0
+for i in range(0,10):
+    appending = False
+    while appending == False:
+        tirAlea = random.randint(0,20)
+        if tirAlea != centerPoint:
+            appending = True
+            experimentalSample.append(tirAlea)
+
+tKernel2 = TriangularKernel(0.1)
+
+dist2 = []
+extremizer = Extremizer(experimentalSample, centerPoint, tKernel2)
+maxStruct = extremizer.computeHMax()
+
 distances = []
 for ind,i in enumerate(experimentalSample):
     distance = abs(i-centerPoint)
-    if  hMin > distance:
-        hMin = distance
-    if hMax < distance*2:
-        hMax = distance*2
     plt.axvline(x=distance*2, color='red')
     distances.append(distance*2)
 
-distances = sorted(distances)
+plt.axvline(x=maxStruct['potentialHValue'], color="green")
+
+#distances = sorted(distances)
 #for ind,p in enumerate(distances):
     #if ind != 9:
         #plt.axvline(x=(distances[ind+1]+p)/2, color='green')
 
-hDomain = np.linspace(hMin*2, hMax*2+4, 100)
+hDomain = np.linspace(0, 40, 200)
 
 hX = []
 tKernel = TriangularKernel(0.1)
