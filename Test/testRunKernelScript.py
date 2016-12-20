@@ -4,6 +4,7 @@ import numpy as np
 from classes.Kernels.TriangularKernel import TriangularKernel
 from classes.Kernels.EllipseKernel import EllipseKernel
 from classes.SampleGenerator.MultimodalGenerator import MultimodalGenerator
+from classes.KernelContext import KernelContext
 
 from math import sqrt
 from math import pi
@@ -23,6 +24,21 @@ yEllOnDomain = []
 yEllHMinOnDomain = []
 yEllHMaxOnDomain = []
 
+"""
+    TEST CODE PIERRE
+"""
+
+kc = KernelContext(sample, tKernelTri)
+ftest, domain_test = kc.computeTotalDensity()
+maxstru = kc.computeHMax(5)
+print(maxstru)
+kc.setBandwidth(maxstru['potentialHValue'])
+ftest2, domain_test2 = kc.computeTotalDensity()
+
+
+"""
+    FIN DU TEST
+"""
 for x in defDomain:
 
     fx = 0
@@ -82,20 +98,21 @@ for x in defDomain:
 plt.figure(figsize=(10,8))
 
 """Histogramme pour voir la tête de la répartition"""
-hist, bins = np.histogram(sample, bins=15)
+hist, bins = np.histogram(sample, bins=1500)
 width = 0.7 * (bins[1] - bins[0])
 center = (bins[:-1] + bins[1:]) / 2
 plt.subplot(223)
-barlist = plt.bar(center, hist, align='center', width=width)
-for bar in barlist:
-    bar.set_color('y')
+#barlist = plt.bar(center, hist, align='center', width=width)
+#for bar in barlist:
+#    bar.set_color('y')
 
-plt.plot(defDomain, yTriOnDomain, label="Brute Force Tri")
-plt.plot(defDomain, yTriHMinOnDomain, label="TriHMin")
-plt.plot(defDomain, yTriHMaxOnDomain, label="TriHMax")
-plt.plot(defDomain, yEllOnDomain, label="Brute Force Ell")
-plt.plot(defDomain, yEllHMinOnDomain, label="EllHMin")
-plt.plot(defDomain, yEllHMaxOnDomain, label="EllHMax")
+plt.plot(domain_test, ftest, label="Avant modif")
+plt.plot(domain_test2, ftest2, label="Après modif")
+#plt.plot(defDomain, yTriHMinOnDomain, label="TriHMin")
+#plt.plot(defDomain, yTriHMaxOnDomain, label="TriHMax")
+#plt.plot(defDomain, yEllOnDomain, label="Brute Force Ell")
+#plt.plot(defDomain, yEllHMinOnDomain, label="EllHMin")
+#plt.plot(defDomain, yEllHMaxOnDomain, label="EllHMax")
 plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 plt.gca().set_position([0, 0, 0.8, 0.8])
 plt.show()

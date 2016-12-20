@@ -17,3 +17,9 @@ class TriangularKernel(Kernel):
         else:
             # Pas dans le Kernel
             return 0
+
+    def kernelFunction(self, u):
+        abs_u = abs(u)
+        if abs_u <= 1:
+            return 1-abs_u
+        return 0
