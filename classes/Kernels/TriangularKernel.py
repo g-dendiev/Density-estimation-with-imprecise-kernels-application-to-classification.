@@ -19,6 +19,9 @@ class TriangularKernel(Kernel):
             return 0
 
     def kernelFunction(self, u):
+        """
+            Fonction à définir, associé au kernel. Voir page wikipédia sur les fonctions de kernel
+        """
         abs_u = abs(u)
         if abs_u <= 1:
             return 1-abs_u
