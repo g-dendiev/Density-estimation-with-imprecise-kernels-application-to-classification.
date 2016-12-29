@@ -30,16 +30,16 @@ with open('resultEpsilon.csv', 'w', newline='') as csvfile:
 
 
 """Boucle sur le nombre de points :"""
-for nbPoints in my_range2(1,1050,2):    #Partir avec peu de points (10) et aller jusqu'à 1000. Doubler le nombre à chaque fois.
+for nbPoints in my_range2(1,1050,2):    #Partir avec peu de points (5 pour la 1erebimodale) et aller jusqu'à 1000. Doubler le nombre à chaque fois.
 
-    """Def du domaine d'étude, on a ici nbPoints de 10 à 1000 points entre -4 et 12"""
-    defDomain = np.linspace(-4, 12, nbPoints)
+    """Def du domaine d'étude, on a ici nbPoints liza.guenneugues@etu.utc.frde 10 à 1000 points entre -4 et 12"""
+    defDomain = np.linspace(-4, 12, 200)
 
     """Boucle permettant de générer 20 multimodales différentes"""
-    for i in range(1,5,1): #on voit pour 5 modales différentes pour l'instant
+    for i in range(1,2,1): #on voit pour 2 bimodales différentes pour l'instant
 
         """Génération de la multimodale """
-        sample = MultimodalGenerator([(100,-1,1),(400,5,2)]).generateNormalSamples()
+        sample = MultimodalGenerator([(nbPoints,-1,1),(4*nbPoints,5,2)]).generateNormalSamples()
 
         """Calcul de l'écart-type de notre multimodale"""
 
@@ -60,9 +60,7 @@ for nbPoints in my_range2(1,1050,2):    #Partir avec peu de points (10) et aller
 
 
         for epsilon in my_range(0.01, hOpt-0.05*hOpt, 0.05*hOpt): # augmenter de 5% de hOpt au fur et à mesure
-            """Définition des tableaux de valeurs pour nos tests"""
-            yTriHMinOnDomain = []
-            yTriHMaxOnDomain = []
+
 
 
             """On trouve le hInf et le hSup (les h donnant  les f(h) suivant : le plus petit et le plus grand"""
@@ -75,10 +73,12 @@ for nbPoints in my_range2(1,1050,2):    #Partir avec peu de points (10) et aller
 
             aireExacte = deri.trapz(sample)
 
-
-            ecartRalatif = ((abs(fHSup-fHInf))/fHInf)*100
+            if fHInf != 0:
+                ecartRalatif = ((abs(fHSup-fHInf))/fHInf)*100
+            else:
+                ecartRalatif = 100
             rapportEpsHOpt = epsilon/hOpt*100
 
             with open('resultEpsilon.csv', 'a') as csvfile:
                 spamwriter = csv.writer(csvfile, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                spamwriter.writerow([nbPoints] + [hOpt] + [epsilon] + [hInfTri] + [hSupTri] + [fHInf] + [fHSup]+ [ecartRalatif] +  [aireExacte] + [rapportEpsHOpt])
+                spamwriter.writerow([5*nbPoints] + [hOpt] + [epsilon] + [hInfTri] + [hSupTri] + [fHInf] + [fHSup]+ [ecartRalatif] +  [aireExacte] + [rapportEpsHOpt])

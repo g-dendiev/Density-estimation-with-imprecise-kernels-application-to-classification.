@@ -1,6 +1,7 @@
 import numpy as np
 import math
 
+
 class KernelContext:
     """
         Classe ayant pour but de s'assurer que nos calculs de kernels sont corrects !
@@ -23,14 +24,14 @@ class KernelContext:
     def updateDomain(self):
         """
             Fonction qui doit être call à chaque modification du dataset, du step ou du bandwidth du kernel,
-             afin de reclaculer le domaine de définition de l'étude
+             afin de recalculer le domaine de définition de l'étude
         """
 
         # Le domaine de def est défini par [min(Dataset) - h, max(Dataset) + h]
         minDomain = min(self.dataset) - self.kernel.bandwidth
         maxDomain = max(self.dataset) + self.kernel.bandwidth
 
-        # On gère les valeurs non entière pour le nombre de points
+        # On gère les valeurs non entières pour le nombre de points
         nbPoints = math.floor(maxDomain - minDomain) / self.step + 1
 
         # Création du domaine de définition
@@ -42,9 +43,13 @@ class KernelContext:
             Les paramètres du kernel sont ceux du kernel passé en attribut lors de la construction
         """
         fx = 0
-        for point in self.dataset:
-            fx += self.kernel.kernelFunction((kernelCenterPoint - point)/self.kernel.bandwidth)
-        fx = fx / (self.kernel.bandwidth * len(self.dataset))
+        if self.kernel.bandwidth==0:
+            print("Division par 0 impossible, on renvoie 0")
+            return fx
+        else:
+            for point in self.dataset:
+                fx += self.kernel.kernelFunction((kernelCenterPoint - point)/self.kernel.bandwidth)
+            fx = fx / (self.kernel.bandwidth * len(self.dataset))
         return fx
 
     def computeTotalDensity(self):
@@ -81,7 +86,8 @@ class KernelContext:
 
     def computeHMax(self, centerPoint):
         """
-            Fonction qui retourne la valeur maximale atteinte par la fonction de densité en faisant varier h, par rapport ay dataset fourni
+            Fonction qui retourne la valeur maximale atteinte par la fonction de densité en faisant varier h,
+            par rapport au dataset fourni
         """
 
         # On s'assure que le kernel est setté
@@ -141,7 +147,7 @@ class KernelContext:
 
         localMaxInf = self.computeDensityOnPoint(centerPoint)
 
-        # On compare pour ne garder que le maximum
+        # On compare pour ne garder que le maximum -> ici on compare avec la borne inf de l'intervalle -> borne gauche
         if localMaxInf > maxStruct['maxedValue']:
             maxStruct['maxedValue'] = localMaxInf
             maxStruct['potentialHValue'] = borneInf
@@ -152,12 +158,12 @@ class KernelContext:
 
         localMaxSup = self.computeDensityOnPoint(centerPoint)
 
-        # On compare pour ne garder que le maximum
+        # On compare pour ne garder que le maximum -> ici on compare avec la borne sup de l'intervalle -> borne droite
         if localMaxSup > maxStruct['maxedValue']:
             maxStruct['maxedValue'] = localMaxSup
             maxStruct['potentialHValue'] = borneSup
 
-        for i in range(len(sortedDistances)):
+        for i in range(len(sortedDistances)): # ici on fait tous les milieus de nos  sous-intervalles et on prend le max
 
             nbPointsLocal = i + 1
 

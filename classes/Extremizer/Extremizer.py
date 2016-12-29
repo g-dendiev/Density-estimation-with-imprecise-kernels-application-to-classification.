@@ -19,7 +19,7 @@ class Extremizer:
         for pt in self.dataset:
             dist = abs(pt-self.centerPoint)
             distTab.append(dist)
-        return sorted(distTab)
+        return sorted(distTab) #retourne le tableau des distances triées
 
     def computeHMax(self):
         if not(self.kernel):

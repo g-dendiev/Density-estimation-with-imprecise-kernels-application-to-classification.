@@ -9,7 +9,7 @@ class Kernel:
         self._name = "Undefined"
         self._bandwidth = bandwidth
 
-    # Getter / Setter de Bandwidth
+    # Getter / Setter de Bandwidth -> domaine sur lequel on fait passer le Kernel
     @property
     def bandwidth(self):
         return self._bandwidth
