@@ -3,7 +3,7 @@ import numpy as np
 import random
 
 from classes.Kernels.TriangularKernel import TriangularKernel
-from classes.Extremizer.Extremizer import Extremizer
+from classes.SampleGenerator.MultimodalGenerator import MultimodalGenerator
 from classes.KernelContext import KernelContext
 
 SEED = 1245632214124 #598473 # SUPER SEED ICI 157  #47 #53 # 23
@@ -25,8 +25,8 @@ test = TriangularKernel.testUnitaires()
 if test==0:
 
     dist2 = []
-    extremizer = Extremizer(experimentalSample, centerPoint, tKernel2)
-    maxStruct = extremizer.computeHMax()
+    extremizer = KernelContext(experimentalSample,tKernel2)
+    maxStruct = extremizer.computeHMax(centerPoint)
 
 
     distances = []
@@ -55,9 +55,9 @@ if test==0:
     plt.plot(hDomain, hX)
     plt.show()
 
-    """sample = MultimodalGenerator([(100,-1,1),(400,5,2)]).generateNormalSamples()    #sample = echantillon
+    sample = MultimodalGenerator([(100,-1,1),(400,5,2)]).generateNormalSamples()    #sample = echantillon
     hist, bins = np.histogram(sample, bins=50)
     width = 0.7 * (bins[1] - bins[0])
     center = (bins[:-1] + bins[1:]) / 2
     plt.bar(center, hist, align='center', width=width)
-    plt.show()"""
+    plt.show()
