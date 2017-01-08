@@ -109,7 +109,7 @@ class KernelContext:
             nbPointsLocal = i + 1
 
             # On calcule la somme des distances comprises entre le centre et la distance évaluée et on l'affecte
-            hMax = 4 * sum(sortedDistances[0:i + 1]) / nbPointsLocal
+            hMax = 2 * sum(sortedDistances[0:i + 1]) / nbPointsLocal
             self.setBandwidth(hMax)
 
             # On va calculer la valeur associée à ce h
@@ -168,7 +168,7 @@ class KernelContext:
             nbPointsLocal = i + 1
 
             # On calcule la somme des distances comprises entre le centre et la distance évaluée et on l'affecte
-            hMax = 4 * sum(sortedDistances[0:i + 1]) / nbPointsLocal
+            hMax = 2 * sum(sortedDistances[0:i + 1]) / nbPointsLocal
 
             if hMax <= borneInf:
                 continue
@@ -228,15 +228,19 @@ class KernelContext:
             minStruct['minValue'] = localMinSup
             minStruct['potentialHValue'] = borneSup
 
-        for dist in sortedDistances:
+        for i in range(len(sortedDistances)): # ici on fait tous les milieus de nos  sous-intervalles et on prend le max
 
-            if dist*2 <= borneInf:
+            nbPointsLocal = i + 1
+
+            # On calcule la somme des distances comprises entre le centre et la distance évaluée et on l'affecte
+            hTmp = 2 * sum(sortedDistances[0:i + 1]) / nbPointsLocal
+
+            if hTmp <= borneInf:
                 continue
 
-            if dist*2 >= borneSup:
+            if hTmp >= borneSup:
                 break
 
-            hTmp = 2*dist
             self.setBandwidth(hTmp)
 
             # On va calculer la valeur associée à ce h

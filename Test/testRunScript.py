@@ -22,6 +22,8 @@ tKernel2 = TriangularKernel(0.1)
 
 test = TriangularKernel.testUnitaires()
 
+print(test)
+
 if test==0:
 
     dist2 = []
@@ -61,3 +63,5 @@ if test==0:
     center = (bins[:-1] + bins[1:]) / 2
     plt.bar(center, hist, align='center', width=width)
     plt.show()
+else:
+    print("mabite")

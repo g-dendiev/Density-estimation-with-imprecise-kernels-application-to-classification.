@@ -15,11 +15,11 @@ nbPointsSecondGauss = 40
 
 # Def du step pour la génération du linspace dans KernelContext
 
-stepLinspace = 0.5
+stepLinspace = 0.8
 
 # Def epsilon
 
-epsilon = 0.1
+epsilon = 0.3
 
 # Génération multimodale
 
