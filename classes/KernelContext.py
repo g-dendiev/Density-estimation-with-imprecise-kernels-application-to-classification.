@@ -63,7 +63,7 @@ class KernelContext:
 
     def setStep(self, step):
         self.step = step
-        self.updateDomain()
+        #self.updateDomain()
 
     def setDataset(self, dataset):
         self.dataset = dataset
@@ -71,7 +71,7 @@ class KernelContext:
 
     def setBandwidth(self, bandwith):
         self.kernel.bandwidth = bandwith
-        self.updateDomain()
+        #self.updateDomain()
 
     def distanceFromDataset(self, centerPoint):
         """
