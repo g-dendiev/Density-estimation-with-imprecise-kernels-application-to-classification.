@@ -10,16 +10,16 @@ from classes.SampleGenerator.MultimodalGenerator import MultimodalGenerator
 
 # Def le nombre de points pour le linspace et pour la multimodale
 
-nbPointsFirstGauss = 10
-nbPointsSecondGauss = 40
+nbPointsFirstGauss = 40
+nbPointsSecondGauss = 200
 
 # Def du step pour la génération du linspace dans KernelContext
 
-stepLinspace = 0.8
+stepLinspace = 0.1
 
 # Def epsilon
 
-epsilon = 1
+epsilon = 1     #mettre ce paramettre en fonction du hOpt trouvé.
 
 # Génération multimodale
 
@@ -30,6 +30,7 @@ sample = MultimodalGenerator([(nbPointsFirstGauss,-1,1),(nbPointsSecondGauss,5,2
 sigma=stdev(sample)
 
 hOpt = 1.06*sigma*(nbPointsFirstGauss+nbPointsSecondGauss)**(-1/5)
+#print("hopt",hOpt)
 
 #def Kernel
 
