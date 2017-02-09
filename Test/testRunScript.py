@@ -64,4 +64,4 @@ if test==0:
     plt.bar(center, hist, align='center', width=width)
     plt.show()
 else:
-    print("mabite")
+    print("error")
