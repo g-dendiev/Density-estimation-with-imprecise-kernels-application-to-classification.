@@ -10,16 +10,16 @@ from classes.SampleGenerator.MultimodalGenerator import MultimodalGenerator
 
 # Def le nombre de points pour le linspace et pour la multimodale
 
-nbPointsFirstGauss = 40
-nbPointsSecondGauss = 200
+nbPointsFirstGauss = 30
+nbPointsSecondGauss = 20
+nbPointsFirstGauss = nbPointsFirstGauss*30
+nbPointsSecondGauss = nbPointsSecondGauss*30
+nbPointsTot= (nbPointsFirstGauss + nbPointsSecondGauss)
+
 
 # Def du step pour la génération du linspace dans KernelContext
-
 stepLinspace = 0.1
 
-# Def epsilon
-
-epsilon = 1     #mettre ce paramettre en fonction du hOpt trouvé.
 
 # Génération multimodale
 
@@ -32,6 +32,11 @@ sigma=stdev(sample)
 hOpt = 1.06*sigma*(nbPointsFirstGauss+nbPointsSecondGauss)**(-1/5)
 #print("hopt",hOpt)
 
+# Def epsilon
+
+epsilon = 0.65*hOpt   #mettre ce paramettre en fonction du hOpt trouvé.
+
+
 #def Kernel
 
 tKernelTri = KernelContext(sample,TriangularKernel(hOpt),stepLinspace)
@@ -41,6 +46,8 @@ tKernelTri = KernelContext(sample,TriangularKernel(hOpt),stepLinspace)
 yTriHOptOnDomain = []
 yTriHMaxOnDomain = []
 yTriHMinOnDomain = []
+
+yInitialBimodal  = []
 
 lenDomain=[]
 
@@ -73,23 +80,27 @@ for pt in tKernelTri.domain:
     yTriHMaxOnDomain.append(structHMax['maxedValue'])
     yTriHMinOnDomain.append(structHMin['minValue'])
 
+    # fonction initiale
+
+#yInitialBimodal.append(tKernelTri.dataset)
+
 """
-print("hOpt tableau ma gueule")
+print("hOpt tableau")
 print(yTriHOptOnDomain)
 
-print("taille hOpt tableau ma gueule")
+print("taille hOpt tableau")
 print(len(yTriHOptOnDomain))
 
-print("hMax tableau ma gueule")
+print("hMax tableau")
 print(yTriHMaxOnDomain)
 
-print("taille hOpt tableau ma gueule")
+print("taille hOpt tableau")
 print(len(yTriHMaxOnDomain))
 
-print("hMin tableau ma gueule")
+print("hMin tableau")
 print(yTriHMinOnDomain)
 
-print("taille hOpt tableau ma gueule")
+print("taille hOpt tableau")
 print(len(yTriHMinOnDomain))
 
 x=np.array(tKernelTri.domain)
@@ -101,12 +112,16 @@ print("taille domaine",x)
 print("taille tKernel.Domain",len(x))
 
 """
-
-plt.plot(tKernelTri.domain, yTriHOptOnDomain, label="TriHOpt")
-plt.plot(tKernelTri.domain, yTriHMaxOnDomain, label="TriHMax")
-plt.plot(tKernelTri.domain, yTriHMinOnDomain, label="TriHMin")
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-plt.gca().set_position([0, 0, 0.8, 0.8])
+#plt.plot(tKernelTri.domain,yInitialBimodal, label="Initial bimodal")
+plt.title("Curves obtained with %d points using the triangular kernel. \n hOpt = %.3g, hMax and hMin in [hOpt - %.3g, hOpt + %.3g]\n" %(nbPointsTot,hOpt, epsilon, epsilon))
+plt.xlabel("x")
+plt.ylabel("y")
+plt.plot(tKernelTri.domain, yTriHOptOnDomain, label="RegHOpt")
+plt.plot(tKernelTri.domain, yTriHMaxOnDomain, label="RegHMax")
+plt.plot(tKernelTri.domain, yTriHMinOnDomain, label="RegHMin")
+plt.xlim(-5,10)
+plt.legend(loc="upper right") #loc=2, borderaxespad=0., bbox_to_anchor=(.5, 1)
+#plt.gca().set_position([0, 0, 0.8, 0.8])
 plt.show()
 
 

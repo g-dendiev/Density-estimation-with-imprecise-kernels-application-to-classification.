@@ -20,11 +20,11 @@ for i in range(0,10):
 
 tKernel2 = TriangularKernel(0.1)
 
-test = TriangularKernel.testUnitaires()
+#test = TriangularKernel.testUnitaires()
 
-print(test)
+#print(test)
 
-if test==0:
+if 0==0:
 
     dist2 = []
     extremizer = KernelContext(experimentalSample,tKernel2)

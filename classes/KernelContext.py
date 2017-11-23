@@ -171,7 +171,7 @@ class KernelContext:
             hMax = 2 * sum(sortedDistances[0:i + 1]) / nbPointsLocal
 
             if hMax <= borneInf:
-                continue
+                continue #on passe directement à i+1 sans faire la suite
 
             if hMax >= borneSup:
                 break
@@ -190,7 +190,7 @@ class KernelContext:
 
     def computeHMinFromInterval(self, centerPoint, h, epsi):
         """
-            Fonction qui retourne la valeur maximale atteinte par la fonction de densité en faisant varier h,
+            Fonction qui retourne la valeur minimale atteinte par la fonction de densité en faisant varier h,
             par rapport au dataset fourni, dans un interval donné par [h-epsi, h+epsi]
         """
 
@@ -223,12 +223,12 @@ class KernelContext:
 
         localMinSup = self.computeDensityOnPoint(centerPoint)
 
-        # On compare pour ne garder que le maximum
+        # On compare pour ne garder que le minimum
         if localMinSup < minStruct['minValue']:
             minStruct['minValue'] = localMinSup
             minStruct['potentialHValue'] = borneSup
 
-        for i in range(len(sortedDistances)): # ici on fait tous les milieus de nos  sous-intervalles et on prend le max
+        for i in range(len(sortedDistances)): # ici on fait tous les milieus de nos  sous-intervalles et on prend le min
 
             nbPointsLocal = i + 1
 
