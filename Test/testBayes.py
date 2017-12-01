@@ -2,6 +2,7 @@ import matplotlib.pylab as plt
 import numpy as np
 from scipy.interpolate import interp1d
 from sklearn.naive_bayes import GaussianNB
+from statistics import stdev
 
 
 from classes.Kernels.EpanechnikovKernel import EpanechnikovKernel
@@ -12,7 +13,7 @@ totalErrorKernel = 0
 totalErrorNB = 0
 totalErrorKernelPrecis = 0
 
-nbTotalIterations = 100
+nbTotalIterations = 10
 
 for e in range(nbTotalIterations):
     # On commence par générer des données
@@ -20,8 +21,12 @@ for e in range(nbTotalIterations):
     sample2 = MultimodalGenerator([(100,5,2)]).generateNormalSamples()
 
     # On sait que sur ce jeu de données, les 200 premières données sont de la classe A, et les 100 dernières sont de la classe 2
+    # Recherche d'une largeur optimale
+    sigma1=stdev(sample1)
+    sigma2=stdev(sample2)
+    hOpt = 1.06 * (sigma1*2+sigma2)/3 * (300) ** (-1 / 5)
     # Création de notre kernel
-    epaKernel = EpanechnikovKernel(2)
+    epaKernel = EpanechnikovKernel(hOpt)
 
     # On génère la fonction de densité de la classe A
     AClassContext = KernelContext(sample1, epaKernel)
@@ -47,8 +52,9 @@ for e in range(nbTotalIterations):
     # Pour voir ce que ça donne !
     plt.plot(AClassDensityDomain, AClassDensity)
     plt.plot(BClassDensityDomain, BClassDensity)
+    #plt.show()
 
-    # Création des deux fonctions d'interpolation
+# Création des deux fonctions d'interpolation
     fA = interp1d(AClassDensityDomain, AClassDensity, kind="cubic")
     EstimatedA = fA(AClassDensityDomain)
 
@@ -58,9 +64,12 @@ for e in range(nbTotalIterations):
     AClassHMaxDensity = []
     AClassHMinDensity = []
     # On tente avec du HMax / HMin
+    # On set d'abord notre epsilon
+    epsilon = 0.65*hOpt
+    # On calcul les densités
     for point in AClassDensityDomain:
-        AClassHMaxDensity.append(AClassContext.computeHMaxFromInterval(point,2,0.2)['maxedValue'])
-        AClassHMinDensity.append(AClassContext.computeHMinFromInterval(point,2,0.2)['minValue'])
+        AClassHMaxDensity.append(AClassContext.computeHMaxFromInterval(point,2,epsilon)['maxedValue'])
+        AClassHMinDensity.append(AClassContext.computeHMinFromInterval(point,2,epsilon)['minValue'])
 
     # On génère les fonctions associées
     fAMax = interp1d(AClassDensityDomain, AClassHMaxDensity, kind="cubic")
@@ -70,8 +79,8 @@ for e in range(nbTotalIterations):
     BClassHMinDensity = []
     # On tente avec du HMax / HMin
     for point in BClassDensityDomain:
-        BClassHMaxDensity.append(BClassContext.computeHMaxFromInterval(point,2,0.2)['maxedValue'])
-        BClassHMinDensity.append(BClassContext.computeHMinFromInterval(point,2,0.2)['minValue'])
+        BClassHMaxDensity.append(BClassContext.computeHMaxFromInterval(point,2,epsilon)['maxedValue'])
+        BClassHMinDensity.append(BClassContext.computeHMinFromInterval(point,2,epsilon)['minValue'])
 
     # On génère les fonctions associées
     fBMax = interp1d(BClassDensityDomain, BClassHMaxDensity, kind="cubic")
@@ -80,12 +89,14 @@ for e in range(nbTotalIterations):
     # Nombre pair !
     nbTestDataClassA = 20
     nbTestDataClassB = 20
-
+    nbTestDataClassA
     nbTotalTestData = nbTestDataClassA + nbTestDataClassB
 
     # On regarde ce que ça donne
     testSample = MultimodalGenerator([(nbTestDataClassA/2,0,2), (nbTestDataClassA/2,10,2), (nbTestDataClassB,5,2)]).generateNormalSamples()
 
+    #plt.plot(testSample)
+    #plt.show()
     supposedResult = []
 
     for i in range(nbTestDataClassA):
@@ -108,7 +119,7 @@ for e in range(nbTotalIterations):
             probaB = 0
 
         try:
-            finalProba = probaA * 2/3 / (probaB * 1/3)
+            finalProba = probaA * 2 / 3 / (probaB * 1 / 3)
         except:
             finalProba = 0
 
@@ -128,7 +139,7 @@ for e in range(nbTotalIterations):
                 probaA = 0
 
             try:
-                finalProba = probaB * 1/3 / (probaA * 2/3)
+                finalProba = probaB * 1 / 3 / (probaA * 2 / 3)
             except:
                 finalProba = 0
 
@@ -137,7 +148,7 @@ for e in range(nbTotalIterations):
             else:
                 results.append("IND")
 
-    pred = gnb.predict(np.array(testSample).reshape(40,1))
+    pred = gnb.predict(np.array(testSample).reshape(40, 1)) #prediction NB
 
     errorKernel = 0
     errorNB = 0
@@ -154,20 +165,19 @@ for e in range(nbTotalIterations):
         if pred[i] != supposedResult[i]:
             errorNB += 1
 
-    errorKernel = errorKernel/nbTotalTestData
+    errorKernel = errorKernel / nbTotalTestData
     totalErrorKernel += errorKernel
 
     errorKernelPrecis = errorKernelPrecis / nbTotalTestData
     totalErrorKernelPrecis += errorKernelPrecis
 
-    errorNB = errorNB/nbTotalTestData
+    errorNB = errorNB / nbTotalTestData
     totalErrorNB += errorNB
 
+totalErrorKernel = totalErrorKernel / nbTotalIterations
+totalErrorNB = totalErrorNB / nbTotalIterations
+totalErrorKernelPrecis = totalErrorKernelPrecis / nbTotalIterations
 
-totalErrorKernel = totalErrorKernel/nbTotalIterations
-totalErrorNB = totalErrorNB/nbTotalIterations
-totalErrorKernelPrecis = totalErrorKernelPrecis/nbTotalIterations
-
-print("Erreur du kernel Imprecis : "+str(totalErrorKernel))
-print("Erreur du kernel Précis : "+str(totalErrorKernelPrecis))
-print("Erreur du Naive Bayes : "+str(totalErrorNB))
+print("Erreur du kernel Imprecis : " + str(totalErrorKernel))
+print("Erreur du kernel Précis : " + str(totalErrorKernelPrecis))
+print("Erreur du Naive Bayes : " + str(totalErrorNB))

@@ -1,5 +1,3 @@
-# TEST CHANGEMENT NB POINTS POUR REGRESSION
-
 import matplotlib.pylab as plt
 import numpy as np
 
@@ -62,8 +60,6 @@ for domain in (sample25, sample50, sample100, sample200, sample500, sample1500):
     yInitialBimodal  = []
 
     lenDomain=[]
-
-    nbPointsTot = len(domain)
 
     for pt in domain:
         # Def des structures qui vont récolter les données (dans la boucle pour une remise à 0 à chaque cycle
