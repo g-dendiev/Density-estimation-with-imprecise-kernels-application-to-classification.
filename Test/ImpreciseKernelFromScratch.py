@@ -5,11 +5,11 @@
 
 import csv
 def loadCsv(filename):
-    lines = csv.reader(open(filename,"rt"))
-    dataset = list(lines)
-    for i in range(len(dataset)):
-        dataset[i] = [float(x) for x in  dataset[i]]
-    return dataset
+	lines = csv.reader(open(filename,"rt"))
+	dataset = list(lines)
+	for i in range(len(dataset)):
+		dataset[i] = [float(x) for x in  dataset[i]]
+	return dataset
 
 # Test import : IT WORKS
 
@@ -21,13 +21,13 @@ def loadCsv(filename):
 
 import random
 def splitDataset(dataset,splitRatio):
-    trainSize = int(len(dataset)*splitRatio)
-    trainSet = []
-    copy = list(dataset)
-    while (len(trainSet)<trainSize):
-        index=random.randrange(len(copy))
-        trainSet.append(copy.pop(index))
-    return [trainSet,copy]
+	trainSize = int(len(dataset)*splitRatio)
+	trainSet = []
+	copy = list(dataset)
+	while (len(trainSet)<trainSize):
+		index=random.randrange(len(copy))
+		trainSet.append(copy.pop(index))
+	return [trainSet,copy]
 
 # Test split : IT WORKS
 
@@ -43,14 +43,14 @@ def splitDataset(dataset,splitRatio):
 
 # On ajoute une variable qui définit la colonne qui contient la réponse = la classe dans le dataset
 def separateByClass(dataset,columnWithClassResponse):
-    separated = {}
-    for i in range(len(dataset)):
-        vector = dataset[i]
-        # On crée la ligne de la classe si elle existe pas
-        if ( vector[columnWithClassResponse] not in separated):
-            separated[vector[columnWithClassResponse]]=[]
-        separated[vector[columnWithClassResponse]].append(vector)
-    return separated
+	separated = {}
+	for i in range(len(dataset)):
+		vector = dataset[i]
+		# On crée la ligne de la classe si elle existe pas
+		if ( vector[columnWithClassResponse] not in separated):
+			separated[vector[columnWithClassResponse]]=[]
+		separated[vector[columnWithClassResponse]].append(vector)
+	return separated
 
 # Test separation des donnees : IT WORKS
 
@@ -67,12 +67,12 @@ def separateByClass(dataset,columnWithClassResponse):
 
 import math
 def mean(numbers):
-    return sum(numbers)/len(numbers)
+	return sum(numbers)/len(numbers)
 
-def stdev(numbers):
-    avg = mean(numbers=numbers)
-    variance = sum([pow(x-avg,2)for x in numbers])/float(len(numbers)-1)
-    return math.sqrt(variance)
+def stdev2(numbers):
+	avg = mean(numbers=numbers)
+	variance = sum([pow(x-avg,2)for x in numbers])/float(len(numbers)-1)
+	return math.sqrt(variance)
 
 # Test : IT WORKS
 #numbers = [1,2,3,4,5]
@@ -84,9 +84,9 @@ def stdev(numbers):
 # #into their own lists so that we can compute the mean and standard deviation values for the attribute.
 # On ajoute la frequence de la classe y comme approximation de p(y)
 def summarize(dataset,columnWithClassResponse,frequence_y):
-    summary = [(mean(attribute), stdev(attribute),frequence_y) for attribute in zip(*dataset)]
-    del summary[columnWithClassResponse]
-    return summary
+	summary = [(mean(attribute), stdev2(attribute),frequence_y) for attribute in zip(*dataset)]
+	del summary[columnWithClassResponse]
+	return summary
 
 # Test summarize : IT WORKS
 #dataset = [[1,20,1],[2,34,4],[1,34,4],[2,20,1]]
@@ -100,13 +100,13 @@ def summarize(dataset,columnWithClassResponse,frequence_y):
 
 # Sommaire par classe !
 def summarizedByClass(dataset,columnWithClassResponse):
-    separated = separateByClass(dataset=dataset,columnWithClassResponse=columnWithClassResponse)
-    summaries = {}
-    for classValue, instance in separated.items():
-        # On ajoute la frequence d'apparition de la classe comme approximation de p(y)
-        frequence_y=(len(instance) / len(dataset))
-        summaries[classValue] = summarize(dataset=instance,columnWithClassResponse=columnWithClassResponse,frequence_y=frequence_y)
-    return summaries
+	separated = separateByClass(dataset=dataset,columnWithClassResponse=columnWithClassResponse)
+	summaries = {}
+	for classValue, instance in separated.items():
+		# On ajoute la frequence d'apparition de la classe comme approximation de p(y)
+		frequence_y=(len(instance) / len(dataset))
+		summaries[classValue] = summarize(dataset=instance,columnWithClassResponse=columnWithClassResponse,frequence_y=frequence_y)
+	return summaries
 
 # Test summarizeByClass : IT WORKS
 #dataset = [[1,20,1],[2,34,4],[1,34,4],[2,20,1],[1,24,4],[3,4,4],[3,4,4]]
@@ -119,7 +119,7 @@ def summarizedByClass(dataset,columnWithClassResponse):
 
 
 
-# 3 ) Make predictions :
+# 3 ) Make predictions : CAS NAIVE BAYES
 
 #Calculate Gaussian Probability Density Function
 #C'est cette fonction qui devra être changée et donc on fera la MAJ avec les fonctions de notre kernel !
@@ -127,9 +127,9 @@ import math
 # Ici on devra faire 2 parties :
 # une pour proba haute et une autre pour proba basse
 #CALCUL PROBA CONDITIONNELLE
-def calculateProbability(x, mean, stdev):
-    exponent = math.exp(-(math.pow(x-mean,2)/(2*math.pow(stdev,2))))
-    return (1/(math.sqrt(2*math.pi)*stdev)) *exponent
+def calculateProbabilityNaiveBayes(x, mean, stdev2):
+	exponent = math.exp(-(math.pow(x-mean,2)/(2*math.pow(stdev,2))))
+	return (1/(math.sqrt(2*math.pi)*stdev)) *exponent
 
 # Test calcul proba : IT WORKS !
 #x = 71.5
@@ -151,16 +151,16 @@ the probability of a given data instance is calculated by multiplying together
 the attribute probabilities for each class. the result is a map of class values to probabilities.
 '''
 
-def calculateClassProbabilities(summaries,inputVector): #,columnWithClassResponse): Pas important ici je pense
-    probabilities = {}
-    for classValue,classSummaries in summaries.items():
-        probabilities[classValue] = 1 #Initialisation pour la multiplication ensuite des probas
-        for i in range(len(classSummaries)):
-            mean, stdev, frequence_y = classSummaries[i]
-            x = inputVector[i]
-            probabilities[classValue] *= calculateProbability(x=x, mean=mean, stdev=stdev)
-            probabilities[classValue] *= frequence_y # multiplication par l'estimation de p(y)
-    return probabilities
+def calculateClassProbabilitiesNaiveBayes(summaries,inputVector): #,columnWithClassResponse): Pas important ici je pense
+	probabilities = {}
+	for classValue,classSummaries in summaries.items():
+		probabilities[classValue] = 1 #Initialisation pour la multiplication ensuite des probas
+		for i in range(len(classSummaries)):
+			mean, stdev2, frequence_y = classSummaries[i]
+			x = inputVector[i]
+			probabilities[classValue] *= calculateProbabilityNaiveBayes(x=x, mean=mean, stdev=stdev2)
+			probabilities[classValue] *= frequence_y # multiplication par l'estimation de p(y)
+	return probabilities
 
 #Test proba par classe : IT WORKS
 #summaries = {0:[(1, 0.5,.8)], 1:[(20, 5.0,.2)]}
@@ -172,14 +172,14 @@ def calculateClassProbabilities(summaries,inputVector): #,columnWithClassRespons
 
 # Retourner 1 prediction :
 
-def predict(summaries, inputVector):
-    probabilities = calculateClassProbabilities(summaries, inputVector)
-    bestLabel, bestProb = None, -1
-    for classValue, probability in probabilities.items():
-        if bestLabel is None or probability > bestProb:
-            bestProb = probability
-            bestLabel = classValue
-    return bestLabel
+def predictNaiveBayes(summaries, inputVector):
+	probabilities = calculateClassProbabilitiesNaiveBayes(summaries, inputVector)
+	bestLabel, bestProb = None, -1
+	for classValue, probability in probabilities.items():
+		if bestLabel is None or probability > bestProb:
+			bestProb = probability
+			bestLabel = classValue
+	return bestLabel
 
 # Test prediction : IT WORKS
 
@@ -189,10 +189,10 @@ def predict(summaries, inputVector):
 #print('Prediction de la classe class: ',prediction)
 
 # Predictions sur un jeu de test complet :
-def getPredictions(summaries, testSet):
+def getPredictionsNaiveBayes(summaries, testSet):
 	predictions = []
 	for i in range(len(testSet)):
-		result = predict(summaries, testSet[i])
+		result = predictNaiveBayes(summaries, testSet[i])
 		predictions.append(result)
 	return predictions
 
@@ -204,7 +204,7 @@ def getPredictions(summaries, testSet):
 
 # 5 ) Moyenne des erreurs :
 
-def getAccuracy(testSet, predictions, columnWithClassResponse):
+def getAccuracyNaiveBayes(testSet, predictions, columnWithClassResponse):
 	correct = 0
 	for x in range(len(testSet)):
 		if testSet[x][columnWithClassResponse] == predictions[x]:
@@ -218,10 +218,145 @@ def getAccuracy(testSet, predictions, columnWithClassResponse):
 #print('Accuracy: ',accuracy)
 
 
+
+
+# ADAPTATION D UNE PARTIE DU CODE POUR L UTILISATION DE NOTRE KERNEL IMPRECIS :
+# 3 ) Make predictions :
+
+# ON UTILISE LES FONCTIONS DU KERNEL PLUTOT QUE CELLE LA POUR NOS ESTIMATION
+
+from statistics import stdev
+from classes.Kernels.TriangularKernel import TriangularKernel
+from classes.KernelContext import KernelContext
+stepLinspace = 0.1
+sigma=stdev(sample)
+
+
+
+#Cette fonction est la MAJ avec les fonctions de notre kernel !
+#import math
+# Ici on devra faire 2 parties :
+# une pour proba haute et une autre pour proba basse
+#CALCUL PROBA CONDITIONNELLE
+def calculateLowProbabilityImpreciseKernel(x, mean, stdev):
+	exponent = math.exp(-(math.pow(x-mean,2)/(2*math.pow(stdev,2))))
+	return (1/(math.sqrt(2*math.pi)*stdev)) *exponent
+
+#def calculateHightProbabilityImpreciseKernel(x, mean, stdev):
+#	exponent = math.exp(-(math.pow(x-mean,2)/(2*math.pow(stdev,2))))
+#	return (1/(math.sqrt(2*math.pi)*stdev)) *exponent
+
+# Test calcul proba : IT WORKS !
+#x = 71.5
+#mean = 73
+#stdev = 6.2
+#frequence_y=0.5
+#lowProbability = calculateLowProbability(x=x,mean=mean,stdev=stdev)
+#hightProbability = calculateHightProbability(x=x,mean=mean,stdev=stdev)
+#print('Proba de x = 71.5 d appartenir a la classe de moyenne 71.5 et stdev 6.2 selon Naive Bayes:',probability)
+
+# Calcul des probas de classes maintenant !
+
+'''
+Now that we can calculate the probability of an attribute belonging to a class,
+we can combine the probabilities of all of the attribute values for a data instance
+and come up with a probability of the entire data instance belonging to the class.
+
+We combine probabilities together by multiplying them. In the calculateClassProbabilities() below,
+the probability of a given data instance is calculated by multiplying together
+the attribute probabilities for each class. the result is a map of class values to probabilities.
+'''
+
+# FAIRE UNE INITIALISATION DES PARAMETRES POUR KERNEL IMPRECIS AVANT CETTE FONCTION
+# PASSER EN PARAMETRE CES DONNES POUR LA FONCTION SUIVANTE AFIN DE POUVOIR LANCER ComputeHMaxFromInterval
+
+def calculateClassLowProbabilitiesImpreciseKernel(summaries,inputVector): #,columnWithClassResponse): Pas important ici je pense
+	from statistics import stdev
+	from classes.Kernels.TriangularKernel import TriangularKernel
+	from classes.KernelContext import KernelContext
+	stepLinspace = 0.1
+	probabilities = {}
+	for classValue,classSummaries in summaries.items():
+		probabilities[classValue] = 1 #Initialisation pour la multiplication ensuite des probas
+		for i in range(len(classSummaries)):
+			mean, stdev, frequence_y = classSummaries[i]
+			x = inputVector[i]
+            lowProbabilities[classValue] *= calculateLowProbabilityImpreciseKernel(x=x, mean=mean, stdev=stdev)
+			lowProbabilities[classValue] *= frequence_y # multiplication par l'estimation de p(y)
+	return lowProbabilities
+
+def calculateClassHightProbabilitiesImpreciseKernel(summaries,inputVector): #,columnWithClassResponse): Pas important ici je pense
+	probabilities = {}
+	for classValue,classSummaries in summaries.items():
+		probabilities[classValue] = 1 #Initialisation pour la multiplication ensuite des probas
+		for i in range(len(classSummaries)):
+			mean, stdev, frequence_y = classSummaries[i]
+			x = inputVector[i]
+			hightProbabilities[classValue] *= calculatehightProbabilityImpreciseKernel(x=x, mean=mean, stdev=stdev)
+			hightProbabilities[classValue] *= frequence_y # multiplication par l'estimation de p(y)
+	return hightProbabilities
+
+#Test proba par classe : IT WORKS
+#summaries = {0:[(1, 0.5,.8)], 1:[(20, 5.0,.2)]}
+#inputVector = [1.1] # pas besoin ici de mettre une fausse valeur en y ou même de faire inputVector = [1.1, ]
+#probabilities = calculateClassProbabilities(summaries, inputVector)
+#print('Probabilities for each class: ',probabilities)
+
+# 4 ) Prédictions !
+
+# Retourner 1 prediction avec 1 ou plusieurs classes :
+
+def predictImpreciseKernel(summaries, inputVector):
+	lowProbabilities = calculateClassLowProbabilitiesImpreciseKernel(summaries, inputVector)
+	hightProbabilities = calculateClassHightProbabilitiesImpreciseKernel(summaries, inputVector)
+	bestLabel, bestProb = None, -1
+	for classValue, probability in probabilities.items():
+		if bestLabel is None or probability > bestProb:
+			bestProb = probability
+			bestLabel = classValue
+	return bestLabel
+
+# Test prediction : IT WORKS
+
+#summaries = {0:[(1, 0.5)], 1:[(20, 5.0)]}
+#inputVector = [20.1] # pas besoin ici de mettre une fausse valeur en y ou même de faire inputVector = [1.1, ]
+#prediction = predict(summaries, inputVector)
+#print('Prediction de la classe class: ',prediction)
+
+# Predictions sur un jeu de test complet :
+def getPredictionsImpreciseKernel(summaries, testSet):
+	predictions = []
+	for i in range(len(testSet)):
+		result = predictNaiveBayes(summaries, testSet[i])
+		predictions.append(result)
+	return predictions
+
+# Test : IT WORKS
+#summaries = {'A':[(1, 0.5)], 'B':[(20, 5.0)]}
+#testSet = [[1.1], [19.1],[18],[0]]
+#predictions = getPredictions(summaries, testSet)
+#print('Predictions: ',predictions)
+
+# 5 ) Moyenne des erreurs :
+
+def getAccuracyImpreciseKernel(testSet, predictions, columnWithClassResponse):
+	correct = 0
+	for x in range(len(testSet)):
+		if testSet[x][columnWithClassResponse] == predictions[x]:
+			correct += 1
+	return (correct/float(len(testSet))) * 100.0
+
+# Test :
+#testSet = [[1,1,1,'a'], [2,2,2,'a'], [3,3,3,'b']]
+#predictions = ['a', 'a', 'a']
+#accuracy = getAccuracy(testSet, predictions,3)
+#print('Accuracy: ',accuracy)
+
+
+
+
+
 # CODE POUR LANCER LES FONCTIONS ET PREDIRE :
-#0 = setosa
-#1 = versicolor
-#2 = virginica
 
 def main():
 	file = 'iris.data.csv'
@@ -232,8 +367,16 @@ def main():
 	print('Split ',len(dataset),' rows into train=',len(trainingSet),' and test=',len(testSet),' rows')
 	summaries = summarizedByClass(trainingSet,columnWithClassResponse=4)
 	# test model
-	predictions = getPredictions(summaries, testSet)
-	accuracy = getAccuracy(testSet, predictions,(4))
-	print('Accuracy: ',accuracy)
+	predictionsNB = getPredictionsNaiveBayes(summaries, testSet)
+	predictionsIK = getPredictionsNaiveBayes(summaries, testSet)
+	accuracyNB = getAccuracyNaiveBayes(testSet, predictionsNB,(4))
+	accuracyIK = getAccuracyNaiveBayes(testSet, predictionsIK,(4))
+	print('Accuracy Naive Bayes : ',accuracyNB)
+	print('Accuracy Naive Bayes : ',accuracyIK)
 
 main()
+
+# Tableaau des identifiants des réponses :
+#0 = setosa
+#1 = versicolor
+#2 = virginica
