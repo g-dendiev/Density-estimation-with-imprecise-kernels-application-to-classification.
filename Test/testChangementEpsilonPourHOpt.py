@@ -83,18 +83,14 @@ for epsilon in (hOpt*.05, hOpt*.1, hOpt*.2, hOpt*.4, hOpt*.6, hOpt*.9):
 
         #print("yTriHOptOnDomain", yTriHOptOnDomain)
 
-    """
+    # Ici sauvegarde des différentes figures
 
-    VOIR POUR AFFICHER DE -5 à 10 en x, ET DE 0 à 0.4 en y !!!!!
-
-    BUT : AVOIR A CHAQUE FOIS LE MEME GRAPHE SANS ETRE PERTURBE PAR LES DIRAC !!!!!!!
-
-    """
-
+    #print(epsilon)
+    plt.figure(figsize=(18,10))
     plt.title("Curves obtained with %d points using the triangular kernel. \n hOpt = %.3g, hMax and hMin in [hOpt - %.3g, hOpt + %.3g]\n" % (nbPointsTot, hOpt, epsilon, epsilon))
     plt.xlabel("x")
     plt.ylabel("y")
-    plt.ylim(0, .45)
+    plt.ylim(0, .4)
     plt.xlim(-5, 10)
     #plt.set_xscale(-5.05,12.05)
     plt.plot(tKernelTri.domain, yTriHOptOnDomain, label="RegHOpt")
@@ -102,7 +98,10 @@ for epsilon in (hOpt*.05, hOpt*.1, hOpt*.2, hOpt*.4, hOpt*.6, hOpt*.9):
     plt.plot(tKernelTri.domain, yTriHMinOnDomain, label="RegHMin")
     plt.legend(loc="upper right")  # loc=2, borderaxespad=0., bbox_to_anchor=(.5, 1)
     # plt.gca().set_position([0, 0, 0.8, 0.8])
+    plt.savefig('Experiment_Triangular_Kernel_75_Points_Epsilon_'+str(round(((epsilon/hOpt)*100),0))+'_Pour_Cent.pdf')
     plt.show()
+print("fin du programme")
+
 
 
     # fonction initiale

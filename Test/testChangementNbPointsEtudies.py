@@ -107,6 +107,9 @@ for i in range(6):
 
         #print("yTriHOptOnDomain", yTriHOptOnDomain)
 
+    # Ici sauvegarde des différentes figures
+
+    plt.figure(figsize=(18, 10))
     plt.title("Curves obtained with %d points using the triangular kernel. \n hOpt = %.3g, hMax and hMin in [hOpt - %.3g, hOpt + %.3g]\n" % (nbPointsTot, hOpt, epsilon, epsilon))
     plt.xlabel("x")
     plt.ylabel("y")
@@ -114,7 +117,9 @@ for i in range(6):
     plt.plot(tKernelTri.domain, yTriHMaxOnDomain, label="RegHMax")
     plt.plot(tKernelTri.domain, yTriHMinOnDomain, label="RegHMin")
     plt.xlim(-5, 10)
+    plt.ylim(0, .4)
     plt.legend(loc="upper right")  # loc=2, borderaxespad=0., bbox_to_anchor=(.5, 1)
+    plt.savefig('Experiment_Triangular_Kernel_'+ str(nbPointsTot) +'_Points_Epsilon_20_Pour_Cent.pdf')
     # plt.gca().set_position([0, 0, 0.8, 0.8])
     plt.show()
 print("fin du programme")
