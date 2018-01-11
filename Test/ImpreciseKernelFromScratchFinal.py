@@ -537,7 +537,7 @@ def main():
 	predictionsIK = getPredictionsImpreciseKernel(dataset, columnWithClassResponse=-1,testSet=testSet2,margeEpsilon=0.6)
 	print('predictions NB =', predictionsNB)
 	print('valeur atendue :',valeurAttendue)
-	print('predictions IK =',predictionsIK)
+	print('predictions IK =',predictionsIK) #le zip permet d'enlever les sous-tableaux quand on a 1 seule valeur
 	accuracyNB = getAccuracyNaiveBayes(testSet, predictionsNB,(4))
 	accuracyIK = getAccuracyImpreciseKernel(testSet, predictionsIK,(4))
 	print('Accuracy Naive Bayes : ',accuracyNB)
@@ -549,7 +549,7 @@ def launchXTimes(times):
 		print('Resultats de l\'iteration : ', i+1)
 		main()
 
-launchXTimes(10)
+launchXTimes(1)
 
 
 # Tableaau des identifiants des réponses :

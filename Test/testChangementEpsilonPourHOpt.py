@@ -37,7 +37,6 @@ hOpt = 1.06*sigma*(nbPointsFirstGauss+nbPointsSecondGauss)**(-1/5)
 
 
 #def Kernel
-
 tKernelTri = KernelContext(sample,TriangularKernel(hOpt),stepLinspace)
 
 # Def des tableau qui vont stocker les valeurs des f(hMax), f(hOpt) et f(hMin)

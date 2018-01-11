@@ -128,8 +128,8 @@ import math
 # une pour proba haute et une autre pour proba basse
 #CALCUL PROBA CONDITIONNELLE
 def calculateProbabilityNaiveBayes(x, mean, stdev2):
-	exponent = math.exp(-(math.pow(x-mean,2)/(2*math.pow(stdev,2))))
-	return (1/(math.sqrt(2*math.pi)*stdev)) *exponent
+	exponent = math.exp(-(math.pow(x-mean,2)/(2*math.pow(stdev2,2))))
+	return (1/(math.sqrt(2*math.pi)*stdev2)) *exponent
 
 # Test calcul proba : IT WORKS !
 #x = 71.5
@@ -158,7 +158,7 @@ def calculateClassProbabilitiesNaiveBayes(summaries,inputVector): #,columnWithCl
 		for i in range(len(classSummaries)):
 			mean, stdev2, frequence_y = classSummaries[i]
 			x = inputVector[i]
-			probabilities[classValue] *= calculateProbabilityNaiveBayes(x=x, mean=mean, stdev=stdev2)
+			probabilities[classValue] *= calculateProbabilityNaiveBayes(x=x, mean=mean, stdev2=stdev2)
 			probabilities[classValue] *= frequence_y # multiplication par l'estimation de p(y)
 	return probabilities
 
@@ -225,16 +225,11 @@ def getAccuracyNaiveBayes(testSet, predictions, columnWithClassResponse):
 
 # ON UTILISE LES FONCTIONS DU KERNEL PLUTOT QUE CELLE LA POUR NOS ESTIMATION
 
-def InitKernelImprecise(marge, dataset):
+def InitHOptKernelImprecise(dataset):
 	from statistics import stdev
-	from classes.Kernels.TriangularKernel import TriangularKernel
-	from classes.KernelContext import KernelContext
-	stepLinspace = 0.1
 	sigma=stdev(dataset)
 	hOpt = 1.06 * sigma * (len(dataset)) ** (-1 / 5)
-	epsilon = marge*hOpt
-	tKernelTri = KernelContext(dataset,TriangularKernel(hOpt),stepLinspace)
-	return tKernelTri, epsilon
+	return hOpt
 
 
 #Cette fonction est la MAJ avec les fonctions de notre kernel !
@@ -245,6 +240,8 @@ def InitKernelImprecise(marge, dataset):
 import math
 def calculsDi(x,Xi):
 	sumDi = 0
+	#print('Xi = ',Xi)
+	#print('x= ',x)
 	for i in range(len(Xi)):
 		sumDi += abs(x-Xi[i])
 	meanDi = sumDi/len(Xi)
@@ -252,36 +249,49 @@ def calculsDi(x,Xi):
 
 #CALCUL PROBA CONDITIONNELLE
 def calculateLowProbabilityImpreciseKernel(x, dataset, h,epsilon,N):
-	sumDi, meanDi = calculsDi(x, dataset)
+	#TRIER LES DONNEES DU DATASET ET ENSUITE MAJ LA SOMME A CHAQUE ITERATION :)
+	sortedDataset = sorted(dataset)
+
 	n = len(dataset)
-	#print('n=',n)
+	print('hOpt = ',h)
+	print('EPSILON=',epsilon)
 	f_i_moins_epsilon = []
 	f_i_plus_epsilon = []
 	f_i_moins_Di = []
 	f_i_plus_Di = []
 	Di=[]
+	f_i_moins_Di.append(10**5)
+	f_i_plus_Di.append(10**5)
+	f_i_moins_epsilon.append(10**5)
+	f_i_plus_epsilon.append(10**5)
+	for i in range(n):
+		Di.append(abs(x - sortedDataset[i])) # Mise à part car on a besoin de D(i+1) après
 	for i in range(n):
 		#print(' i = ',i)
 		#print('x= ',x)
 		#print('dataset ',i,' = ',dataset[i])
-		Di.append(abs(x - dataset[i]))
+		sumDi, meanDi = calculsDi(x, sortedDataset[0:i+1])
 		#print('Di= ',Di[i])
-		f_i_moins_epsilon.append((n/(N*(h-epsilon))) - (sumDi)/(N*((h-epsilon)**2)))
-		#print('F i moins epsilon = ', f_i_moins_epsilon[i])
-		f_i_plus_epsilon.append(((n/(N*(h+epsilon))) - (sumDi)/(N*((h+epsilon)**2))))
-		#print('F i plus epsilon = ', f_i_plus_epsilon[i])
-		f_i_moins_Di.append((n / (N * (h - Di[i]))) - (sumDi) / (N * ((h - Di[i]) ** 2)))
-		#print('F i moins Di = ', f_i_moins_Di[i])
-		f_i_plus_Di.append(((n / (N * (h + Di[i]))) - (sumDi) / (N * ((h + Di[i]) ** 2))))
-		#print('F i plus Di = ', f_i_plus_Di[i])
+		if(h>epsilon and i == (n-1)):
+			f_i_moins_epsilon.append(((i+1)/(N*(h-epsilon))) - (sumDi)/(N*((h-epsilon)**2)))
+			#print('h>epsilon and i == (n-1), F i moins epsilon = ', f_i_moins_epsilon[(len(f_i_moins_epsilon)-1)])
+		if(i == (n-1)):
+			f_i_plus_epsilon.append((((i+1)/(N*(h+epsilon))) - (sumDi)/(N*((h+epsilon)**2))))
+			#print('CAS PLUS EPSILON i == (n-1), F i plus epsilon = ', f_i_plus_epsilon[(len(f_i_plus_epsilon)-1)])
+		if(Di[i]<2*epsilon and x!= Di[i]):
+			f_i_moins_Di.append(((i+1) / (N * (x - Di[i]))) - (sumDi) / (N * ((x - Di[i]) ** 2)))
+			#print('i ==',i,', F i moins Di = ', f_i_moins_Di[(len(f_i_moins_Di)-1)])
+			f_i_plus_Di.append((((i+1) / (N * (x + Di[i]))) - (sumDi) / (N * ((x + Di[i]) ** 2))))
+			#print('i == ',i,', F i plus Di = ', f_i_plus_Di[(len(f_i_plus_Di)-1)])
 	lowProbability = min(min(f_i_moins_epsilon),min(f_i_plus_epsilon),min(f_i_moins_Di),min(f_i_plus_Di))
 	if lowProbability < 0:
 		lowProbability = 0
-	#print('Low probability = ', lowProbability)
+	#print('Low probability = ', lowProbability, 'avec hOpt = ',h)
 	return lowProbability
 
 def calculateHightProbabilityImpreciseKernel(x, dataset, h,epsilon,N):
-	sumDi, meanDi = calculsDi(x, dataset)
+	# TRIER LES DONNEES DU DATASET ET ENSUITE MAJ LA SOMME A CHAQUE ITERATION :)
+	sortedDataset = sorted(dataset)
 	n = len(dataset)
 	#print('n=', n)
 	f_i_moins_epsilon = []
@@ -290,31 +300,40 @@ def calculateHightProbabilityImpreciseKernel(x, dataset, h,epsilon,N):
 	f_i_plus_Di = []
 	f_i_2_E_Di = []
 	Di = []
+	f_i_moins_Di.append(0)
+	f_i_plus_Di.append(0)
+	f_i_moins_epsilon.append(0)
+	f_i_plus_epsilon.append(0)
+	f_i_2_E_Di.append(0)
+
+	for i in range(n):
+		Di.append(abs(x - sortedDataset[i])) # Mise à part car on a besoin de D(i+1) après
 	for i in range(n):
 		#print(' i = ', i)
 		#print('x= ', x)
 		#print('dataset ', i, ' = ', dataset[i])
-		Di.append(abs(x - dataset[i]))
+		#print('dataset trie : ',sortedDataset)
+		sumDi, meanDi = calculsDi(x, sortedDataset[0:i+1])
 		#print('Di= ', Di[i])
-		f_i_moins_epsilon.append((n / (N * (h - epsilon))) - (sumDi) / (N * ((h - epsilon) ** 2)))
-		#print('F i moins epsilon = ', f_i_moins_epsilon[i])
-		f_i_plus_epsilon.append(((n / (N * (h + epsilon))) - (sumDi) / (N * ((h + epsilon) ** 2))))
-		#print('F i plus epsilon = ', f_i_plus_epsilon[i])
-		f_i_moins_Di.append((n / (N * (h - Di[i]))) - (sumDi) / (N * ((h - Di[i]) ** 2)))
-		#print('F i moins Di = ', f_i_moins_Di[i])
-		f_i_plus_Di.append(((n / (N * (h + Di[i]))) - (sumDi) / (N * ((h + Di[i]) ** 2))))
-		#print('F i plus Di = ', f_i_plus_Di[i])
-		if(meanDi < epsilon and meanDi != 0):
+		if(h>epsilon and i == (n-1)):
+			f_i_moins_epsilon.append(((i+1) / (N * (h - epsilon))) - (sumDi) / (N * ((h - epsilon) ** 2)))
+			#print('F i moins epsilon = ', f_i_moins_epsilon[i])
+		if(i == (n-1)):
+			f_i_plus_epsilon.append((((i+1) / (N * (h + epsilon))) - (sumDi) / (N * ((h + epsilon) ** 2))))
+			#print('F i plus epsilon = ', f_i_plus_epsilon[i])
+		if(Di[i]<2*epsilon and x!= Di[i]):
+			f_i_moins_Di.append(((i+1) / (N * (x - Di[i]))) - (sumDi) / (N * ((x - Di[i]) ** 2)))
+			#print('F i moins Di = ', f_i_moins_Di[i])
+			f_i_plus_Di.append((((i+1) / (N * (x + Di[i]))) - (sumDi) / (N * ((x + Di[i]) ** 2))))
+			#print('F i plus Di = ', f_i_plus_Di[i])
+		if(meanDi > Di[i] and i>=0 and i != (n-1) and meanDi < Di[i+1] ):
 			#print('E(Di) = ',meanDi)
 			#print('epsilon = ', epsilon)
-			f_i_2_E_Di.append(((n / (N * (2*meanDi))) - (sumDi) / (N * ((2*meanDi) ** 2))))
+			f_i_2_E_Di.append((((i+1) / (N * (2*meanDi))) - (sumDi) / (N * ((2*meanDi) ** 2))))
 			#print('F i plus 2 E(Di) = ', f_i_2_E_Di[i])
-	if(len(f_i_2_E_Di) == 0 ): #liste vide
-		hightProbability = max(max(f_i_moins_epsilon), max(f_i_plus_epsilon), max(f_i_moins_Di), max(f_i_plus_Di))
-	else:
-		hightProbability = max(max(f_i_moins_epsilon), max(f_i_plus_epsilon), max(f_i_moins_Di), max(f_i_plus_Di),max(f_i_2_E_Di))
-	if hightProbability < 0:
-		hightProbability = 0
+
+	hightProbability = max(max(f_i_moins_epsilon), max(f_i_plus_epsilon), max(f_i_moins_Di), max(f_i_plus_Di),max(f_i_2_E_Di))
+
 	#print('Hight probability = ', hightProbability)
 	return hightProbability
 
@@ -360,10 +379,19 @@ the attribute probabilities for each class. the result is a map of class values 
 # FAIRE UNE INITIALISATION DES PARAMETRES POUR KERNEL IMPRECIS AVANT CETTE FONCTION
 # PASSER EN PARAMETRE CES DONNES POUR LA FONCTION SUIVANTE AFIN DE POUVOIR LANCER ComputeHMaxFromInterval
 
-def calculateClassLowProbabilitiesImpreciseKernel(dataset,columnWithClassResponse,inputVector,hOpt,margeEpsilon): #,columnWithClassResponse): Pas important ici je pense
+def calculateClassLowProbabilitiesImpreciseKernel(dataset,columnWithClassResponse,inputVector,margeEpsilon): #,columnWithClassResponse): Pas important ici je pense
 	N = len(dataset)
 	separated = separateByClassWithoutResponse(dataset,columnWithClassResponse)
-	epsilon = margeEpsilon*hOpt
+	dataset2 = []
+	hOpt=[]
+	for i in range(len(dataset)):
+		if(columnWithClassResponse == -1):
+			dataset2.append(dataset[i][0:columnWithClassResponse])
+		else:
+			dataset2.append(dataset[i][1:])
+	dataset2Separated = [attribute1 for attribute1 in zip(*dataset2)]
+	for i in range(len(dataset2Separated)):
+		hOpt.append(InitHOptKernelImprecise(dataset2Separated[i]))
 	#print(len(separated.items()))
 	lowProbabilities = {}
 	for classValue,classDataset in separated.items():
@@ -382,7 +410,7 @@ def calculateClassLowProbabilitiesImpreciseKernel(dataset,columnWithClassRespons
 			#print(x)
 			## CALCUL MEANDI ET SUMDI ET ENSUITE ON ENVOIE !
 			#mean, stdev, frequence_y = classSummaries[i]
-			lowProbabilities[classValue] *= calculateLowProbabilityImpreciseKernel(x=x, dataset=classDatasetWithColSeparated[i], h=hOpt, epsilon=epsilon, N=N)
+			lowProbabilities[classValue] *= calculateLowProbabilityImpreciseKernel(x=x, dataset=classDatasetWithColSeparated[i], h=hOpt[i], epsilon=margeEpsilon*hOpt[i], N=N)
 			lowProbabilities[classValue] *= frequence_y # multiplication par l'estimation de p(y)
 	return lowProbabilities
 
@@ -390,11 +418,20 @@ def calculateClassLowProbabilitiesImpreciseKernel(dataset,columnWithClassRespons
 #print('testLow = ',testLow)
 
 
-def calculateClassHightProbabilitiesImpreciseKernel(dataset,columnWithClassResponse,inputVector,hOpt,margeEpsilon): #,columnWithClassResponse): Pas important ici je pense
+def calculateClassHightProbabilitiesImpreciseKernel(dataset,columnWithClassResponse,inputVector,margeEpsilon): #,columnWithClassResponse): Pas important ici je pense
 	N = len(dataset)
+	dataset2 = []
+	hOpt = []
 	separated = separateByClassWithoutResponse(dataset, columnWithClassResponse)
-	epsilon = margeEpsilon * hOpt
-	# print(len(separated.items()))
+	for i in range(len(dataset)):
+		if (columnWithClassResponse == -1):
+			dataset2.append(dataset[i][0:columnWithClassResponse])
+		else:
+			dataset2.append(dataset[i][1:])
+	dataset2Separated = [attribute1 for attribute1 in zip(*dataset2)]
+	for i in range(len(dataset2Separated)):
+		hOpt.append(InitHOptKernelImprecise(dataset2Separated[i]))
+		# print(len(separated.items()))
 	hightProbabilities = {}
 	for classValue, classDataset in separated.items():
 		#print('classDataset :', classDataset)
@@ -412,7 +449,7 @@ def calculateClassHightProbabilitiesImpreciseKernel(dataset,columnWithClassRespo
 			#print(x)
 			## CALCUL MEANDI ET SUMDI ET ENSUITE ON ENVOIE !
 			# mean, stdev, frequence_y = classSummaries[i]
-			hightProbabilities[classValue] *= calculateHightProbabilityImpreciseKernel(x=x,dataset=classDatasetWithColSeparated[i], h=hOpt, epsilon=epsilon, N=N)
+			hightProbabilities[classValue] *= calculateHightProbabilityImpreciseKernel(x=x,dataset=classDatasetWithColSeparated[i], h=hOpt[i], epsilon=margeEpsilon*hOpt[i], N=N)
 			hightProbabilities[classValue] *= frequence_y  # multiplication par l'estimation de p(y)
 	return hightProbabilities
 
@@ -429,11 +466,11 @@ def calculateClassHightProbabilitiesImpreciseKernel(dataset,columnWithClassRespo
 
 # Retourner 1 prediction avec 1 ou plusieurs classes :
 
-def predictImpreciseKernel(dataset,columnWithClassResponse,inputVector,hOpt,margeEpsilon):
-	lowProbabilities = calculateClassLowProbabilitiesImpreciseKernel(dataset,columnWithClassResponse,inputVector,hOpt,margeEpsilon)
-	hightProbabilities = calculateClassHightProbabilitiesImpreciseKernel(dataset,columnWithClassResponse,inputVector,hOpt,margeEpsilon)
+def predictImpreciseKernel(dataset,columnWithClassResponse,inputVector,margeEpsilon):
+	lowProbabilities = calculateClassLowProbabilitiesImpreciseKernel(dataset,columnWithClassResponse,inputVector,margeEpsilon)
+	hightProbabilities = calculateClassHightProbabilitiesImpreciseKernel(dataset,columnWithClassResponse,inputVector,margeEpsilon)
 	bestLabel = []
-	print('prediction de low probabilities : ',lowProbabilities)
+	#print('prediction de low probabilities : ',lowProbabilities)
 	for classValueLow,lowProba in lowProbabilities.items():
 		#print('class Value = ',classValueLow)
 		#print('lowProba =',lowProba)
@@ -451,14 +488,14 @@ def predictImpreciseKernel(dataset,columnWithClassResponse,inputVector,hOpt,marg
 		#On teste si notre proba haute est inf à toutes les probas basses
 		#Si c'est le cas on ne met pas la classe dans les potentielles classes de retour
 		#Sinon on ajoute la classe aux classes de retour
-		print('notre test fonctionne')
+		print('passage par le deuxième cycle de comparaison avec pour hight :',hightProbabilities,' et pour low : ',lowProbabilities)
 		for classValueHight2, hightProba2 in hightProbabilities.items():
-			print('2e partie : class Value = ', classValueHight2)
-			print('2e partie : hightProba =', hightProba2)
+			#print('2e partie : class Value = ', classValueHight2)
+			#print('2e partie : hightProba =', hightProba2)
 			tjrsInf = 1
 			for classValueLow2, lowProba2 in lowProbabilities.items():
 				if classValueHight2 != classValueLow2:
-					print('2e partie : lowProba = ', lowProba2)
+					#print('2e partie : lowProba = ', lowProba2)
 					if lowProba2 > hightProba2 and tjrsInf == 1:
 						tjrsInf = 1
 					else:
@@ -470,36 +507,38 @@ def predictImpreciseKernel(dataset,columnWithClassResponse,inputVector,hOpt,marg
 
 # Test prediction : IT WORKS
 
-testPredict=predictImpreciseKernel(dataset=[[1,3,2,5],[2,6,3,5],[1,3.5,2.2,5.1],[3,3,2,5],[3,3.5,2.2,5.1]],columnWithClassResponse=0,inputVector=[3.5,2.8,6],hOpt=5,margeEpsilon=0.1)
-print('testpredict = ',testPredict)
+#testPredict=predictImpreciseKernel(dataset=[[1,3,2,5],[2,6,3,5],[1,3.5,2.2,5.1],[3,3,2,5],[3,3.5,2.2,5.1]],columnWithClassResponse=0,inputVector=[3.5,2.8,6],hOpt=5,margeEpsilon=0.1)
+#print('testpredict = ',testPredict)
 
 # Predictions sur un jeu de test complet :
-def getPredictionsImpreciseKernel(dataset,columnWithClassResponse,inputVector,hOpt,margeEpsilon):
+def getPredictionsImpreciseKernel(dataset,columnWithClassResponse,testSet,margeEpsilon):
 	predictions = []
+	#print('test set passé en argument =',testSet)
 	for i in range(len(testSet)):
-		result = predictNaiveBayes(summaries, testSet[i])
+		print('test set de ',i,' = ',testSet[i])
+		result = predictImpreciseKernel(dataset,columnWithClassResponse,testSet[i], margeEpsilon)
+		print('resultat pour la ligne ',i,' : ',result)
 		predictions.append(result)
 	return predictions
 
 # Test : IT WORKS
-#summaries = {'A':[(1, 0.5)], 'B':[(20, 5.0)]}
-#testSet = [[1.1], [19.1],[18],[0]]
-#predictions = getPredictions(summaries, testSet)
-#print('Predictions: ',predictions)
+#testSet=[[3.5,2.8,6],[3,3,5],[10.1,12.1,14.1]]
+#testPredictions=getPredictionsImpreciseKernel(dataset=[[1,3,2,5],[2,10,12,14],[1,3.5,2.2,5.1],[3,3,2,5],[3,3.5,2.2,5.1]],columnWithClassResponse=0,testSet=testSet,hOpt=5,margeEpsilon=0.1)
+#print('testpredictions = ',testPredictions)
 
 # 5 ) Moyenne des erreurs :
 
 def getAccuracyImpreciseKernel(testSet, predictions, columnWithClassResponse):
 	correct = 0
 	for x in range(len(testSet)):
-		if testSet[x][columnWithClassResponse] == predictions[x]:
-			correct += 1
+		if testSet[x][columnWithClassResponse] in predictions[x]:
+			correct += 1/len(predictions[x])
 	return (correct/float(len(testSet))) * 100.0
 
 # Test :
 #testSet = [[1,1,1,'a'], [2,2,2,'a'], [3,3,3,'b']]
-#predictions = ['a', 'a', 'a']
-#accuracy = getAccuracy(testSet, predictions,3)
+#predictions = ['a', 'a', ['a','b']]
+#accuracy = getAccuracyImpreciseKernel(testSet, predictions,3)
 #print('Accuracy: ',accuracy)
 
 
@@ -510,21 +549,26 @@ def getAccuracyImpreciseKernel(testSet, predictions, columnWithClassResponse):
 
 def main():
 	file = 'iris.data.csv'
-	splitRatio = 0.67
+	splitRatio = 0.99
 	dataset = loadCsv(file)
 	trainingSet, testSet = splitDataset(dataset, splitRatio)
 	# prepare model
 	print('Split ',len(dataset),' rows into train=',len(trainingSet),' and test=',len(testSet),' rows')
 	summaries = summarizedByClass(trainingSet,columnWithClassResponse=4)
+	print('testSet = ',testSet)
+	testSet2 = []
+	for i in range(len(testSet)):
+		testSet2.append(testSet[i][0:4])
 	# test model
-	predictionsNB = getPredictionsNaiveBayes(summaries, testSet)
-	predictionsIK = getPredictionsNaiveBayes(summaries, testSet)
-	accuracyNB = getAccuracyNaiveBayes(testSet, predictionsNB,(4))
-	accuracyIK = getAccuracyNaiveBayes(testSet, predictionsIK,(4))
-	print('Accuracy Naive Bayes : ',accuracyNB)
-	print('Accuracy Naive Bayes : ',accuracyIK)
+	#predictionsNB = getPredictionsNaiveBayes(summaries, testSet)
+	predictionsIK = getPredictionsImpreciseKernel(dataset, columnWithClassResponse=-1,testSet=testSet2,margeEpsilon=0.5)
+	print('predictions IK =',predictionsIK)
+	#accuracyNB = getAccuracyNaiveBayes(testSet, predictionsNB,(4))
+	accuracyIK = getAccuracyImpreciseKernel(testSet, predictionsIK,(4))
+	#print('Accuracy Naive Bayes : ',accuracyNB)
+	print('Accuracy Imprecise Kernel : ',accuracyIK)
 
-#main()
+main()
 
 # Tableaau des identifiants des réponses :
 #0 = setosa
