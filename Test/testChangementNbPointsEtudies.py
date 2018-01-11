@@ -92,7 +92,7 @@ for i in range(6):
 
         structHMax = {
             'potentialHValue': -1,
-            'minValue': -1
+            'maxedValue': -1
         }
 
         # Calculs de f(hOpt),f(hMax), et f(hMin)

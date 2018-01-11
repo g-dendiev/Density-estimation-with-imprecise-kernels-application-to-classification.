@@ -67,7 +67,7 @@ for epsilon in (hOpt*.05, hOpt*.1, hOpt*.2, hOpt*.4, hOpt*.6, hOpt*.9):
 
         structHMax = {
             'potentialHValue': -1,
-            'minValue': -1
+            'maxedValue': -1
         }
 
         # Calculs de f(hOpt),f(hMax), et f(hMin)

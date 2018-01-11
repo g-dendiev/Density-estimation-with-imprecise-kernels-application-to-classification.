@@ -76,7 +76,7 @@ for domain in (sample25, sample50, sample100, sample200, sample500, sample1500):
 
         structHMin = {
             'potentialHValue': -1,
-            'minValue': -1
+            'maxedValue': -1
         }
 
         structHMax = {
