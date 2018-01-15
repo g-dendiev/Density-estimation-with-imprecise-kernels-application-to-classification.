@@ -6,7 +6,7 @@ import numpy as np
 from statistics import stdev
 
 
-from classes.Kernels.TriangularKernel import TriangularKernel
+from classes.Kernels.EpanechnikovKernel import EpanechnikovKernel
 from classes.KernelContext import KernelContext
 
 # 1 ) On importe les données
@@ -71,16 +71,6 @@ def separateByClass(dataset,columnWithClassResponse):
 #print('separation 3 sur col -1', separated_1)
 
 
-# Calcul de données de stats :
-
-import math
-def mean(numbers):
-	return sum(numbers)/len(numbers)
-
-def stdev2(numbers):
-	avg = mean(numbers=numbers)
-	variance = sum([pow(x-avg,2)for x in numbers])/float(len(numbers)-1)
-	return math.sqrt(variance)
 
 # ADAPTATION D UNE PARTIE DU CODE POUR L UTILISATION DE NOTRE KERNEL IMPRECIS :
 # 3 ) Make predictions :
@@ -135,7 +125,7 @@ def calculateProbabilityImpreciseKernel(dataset, h,epsilon,N):
 	lowProbabilities = []
 	hightProbabilities = []
 	#print('DATASET AVANT PASSAGE DANS KERNEL :', dataset)
-	tKernelTri = KernelContext(dataset, TriangularKernel(h), stepLinspace)
+	tKernelTri = KernelContext(dataset, EpanechnikovKernel(h), stepLinspace)
 
 	for pt in tKernelTri.domain:
 		# Def des structures qui vont récolter les données (dans la boucle pour une remise à 0 à chaque cycle
@@ -356,7 +346,7 @@ def getAccuracyImpreciseKernel(testSet, predictions, columnWithClassResponse):
 	correct = 0
 	for x in range(len(testSet)):
 		if testSet[x][columnWithClassResponse] in predictions[x]:
-			correct += 1#/len(predictions[x])
+			correct += 1/len(predictions[x])
 	return (correct/float(len(testSet))) * 100.0
 
 # Test :
@@ -378,8 +368,6 @@ def main():
 	trainingSet, testSet = splitDataset(dataset, splitRatio)
 	# prepare model
 	print('Split ',len(dataset),' rows into train=',len(trainingSet),' and test=',len(testSet),' rows')
-	#summaries = summarizedByClass(trainingSet,columnWithClassResponse=4)
-	#print('testSet = ',testSet)
 	testSet2 = []
 	valeurAttendue = []
 	for i in range(len(testSet)):
@@ -400,7 +388,6 @@ def main():
 
 def launchXTimes(times):
 	for i in range(times):
-		#random.seed(i)
 		print('Resultats de l\'iteration : ', i+1)
 		main()
 
