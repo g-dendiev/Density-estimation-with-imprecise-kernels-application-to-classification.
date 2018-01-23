@@ -79,6 +79,16 @@ def separateByClass(dataset, columnWithClassResponse):
 # print('separation 2 sur col 1', separated1)
 # print('separation 3 sur col -1', separated_1)
 
+def separateFrequence(generalLowProbabilities,generalHightProbabilities):
+	frequence_y = {}
+	generalLowProbabilitiesWithoutFrequence = {}
+	generalHightProbabilitiesWithoutFrequence = {}
+	for classValue, tabResult in generalLowProbabilities.items():
+		frequence_y[classValue] = tabResult[-1] #frequence stockée en derniere position
+		for i in len(tabResult-1):
+			generalLowProbabilitiesWithoutFrequence[classValue].append(generalLowProbabilities[i])
+			generalHightProbabilitiesWithoutFrequence[classValue].append(generalHightProbabilities[i])
+	return generalLowProbabilitiesWithoutFrequence,generalLowProbabilitiesWithoutFrequence, frequence_y
 
 # Calcul de données de stats :
 
@@ -126,32 +136,104 @@ def calculsDi(x, Xi):
 
 
 # CALCUL PROBA CONDITIONNELLE
-def findProbabilityImpreciseKernel(x, generalHightProbabilities, tKernelDomain, generalLowProbabilities):
-	iMin = 0
+# AJOUTER UN PARAMETRE EPSILON POUR EVITER LES PROBAS NULLES ICI C'EST FAIT A LA MAIN DANS FONCTION
+def findProbabilityImpreciseKernel(x, generalHightProbabilities, tKernelDomain, generalLowProbabilities,epsilon = 0.001):
+	# BUT : créer un dictionnaire pour proba low et un pour proba hight et on renvoie à chaque fois
+	# toutes ces données pour le vecteur d'étude passé en parametre !
+	# But ensuite dans le predict : pouvoir comparer les probas hight et low des classes jointes ;)
+
+
+	# Creation des dictionnaires
+	localLowProbabilities = {}
+	localHightProbabilities = {}
+
+	#Initialisation du compteur
+	jMin = 0
+
+
+	###### FAIRE UNE MINI FONCTION QUI RENVOIE LA FREQUENCE DE CHAQUE CLASSE
+	###### ET CHANGE LES DATAS D'ENTREE POUR NE PLUS AVOIR LA FREQUENCE ET NE CONSERVER QUE LES VARIABLES
+	###### separateFrequence(generalLowProbabilities,generalHightProbabilities)
+
+	frequence_y = {} # Dictionnaire avec les frequences des classes.
+	generalLowProbabilitiesWithoutFrequence = {}
+	generalHightProbabilitiesWithoutFrequence = {}
+
+	generalLowProbabilitiesWithoutFrequence,generalLowProbabilitiesWithoutFrequence, frequence_y = separateFrequence(generalLowProbabilities,generalHightProbabilities)
+
+
 	# print('VALEUR DE X : ', x)
 	# print(' PROBAS MAXIMALES :',generalHightProbabilities)
 	# print(' PROBAS MINIMALES :', generalLowProbabilities)
 	# print(' TKERNEL DOMAIN :', tKernelDomain)
-	for i in range(len(tKernelDomain)):
-		tKernelDomain[i] = abs(tKernelDomain[i] - x)
-		if (tKernelDomain[iMin] > tKernelDomain[i]):
-			iMin = i
-	return generalLowProbabilities[iMin], generalHightProbabilities[iMin]
+
+	for classValue, tabResult in generalLowProbabilitiesWithoutFrequence.items():
+		localLowProbabilities[classValue] = 1  # Initialisation pour la multiplication
+		tKernelDomainBis = []
+		tKernelDomainBis.append(tKernelDomain)
+		for i in len(tabResult):  # Iteration sur les differents attributs / var d'entree avec result specifique a  chaque classe
+			tableauVarClassEnCours = []
+			tableauVarClassEnCours.append(tabResult[i])
+			for j in range(len(tKernelDomain)):
+				tKernelDomainBis[j] = abs(tKernelDomainBis[j] - x[i])
+				if (tKernelDomainBis[jMin] > tKernelDomainBis[j]):
+					jMin = j
+			# MAJ des probas conditionnelles
+			if (tableauVarClassEnCours[j] == 0):
+				localLowProbabilities[classValue] *= epsilon  # On penalise par epsilon mais au moins on multiplie pas pasr 0 !
+			else:
+				localLowProbabilities[classValue] *= tableauVarClassEnCours[j]  # On penalise par epsilon mais au moins on multiplie pas pasr 0 !
+		localLowProbabilities[classValue] *= frequence_y[classValue]
+
+	for classValue, tabResult in generalHightProbabilitiesWithoutFrequence.items():
+		localHightProbabilities[classValue] = 1  # Initialisation pour la multiplication
+		tKernelDomainBis = []
+		tKernelDomainBis.append(tKernelDomain)
+		for i in len(tabResult):  # Iteration sur les differents attributs / var d'entree avec result specifique a  chaque classe
+			tableauVarClassEnCours = []
+			tableauVarClassEnCours.append(tabResult[i])
+			for j in range(len(tKernelDomain)):
+				tKernelDomainBis[j] = abs(tKernelDomainBis[j] - x[i])
+				if (tKernelDomainBis[jMin] > tKernelDomainBis[j]):
+					jMin = j
+			# MAJ des probas conditionnelles
+			if (tableauVarClassEnCours[j] == 0):
+				localHightProbabilities[classValue] *= epsilon  # On penalise par epsilon mais au moins on multiplie pas pasr 0 !
+			else:
+				localHightProbabilities[classValue] *= tableauVarClassEnCours[j]  # On penalise par epsilon mais au moins on multiplie pas pasr 0 !
+		localHightProbabilities[classValue] *= frequence_y[classValue]
+
+	return localLowProbabilities, localHightProbabilities
 
 
-def calculateProbabilityImpreciseKernel(dataset, h, epsilon, N):
-	# TRIER LES DONNEES DU DATASET ET ENSUITE MAJ LA SOMME A CHAQUE ITERATION :)
-	# sortedDataset = sorted(dataset)
-	n = len(dataset)
-	# print('n=', n)
-	stepLinspace = 0.3  # ATTENTION Mettre au moins 0.05 pours les vrai tests !
+def calculateProbabilityImpreciseKernel(datasetTotalVar, datasetClass, h, epsilon, N):
+	#Pour avoir les mêmes domaines sur toutes les classes, faire un premier kernelTri avec toutes les données de la var
+	#Itérer ensuite sur ce domaine là mais avec nos data de classe !
+	#Cela permet d'avoir un domain fixe ;)
+
+	# Problème : avoir une taille de domaine qui soit la même pour chaque classe ! Non pas une valeur fixe !
+
+
+	# IDEE : POUR POUVOIR FAIRE DES OPERATIONS SUR LES TABLEAUX, IL DOIVENT AVOIR LA MEME TAILLE !
+
+	# Astuce pour jouer avec le updateDomain qui est dans le KenrelContext.
+	# On met comme numérateur de self.stepLinspace le numérateur de la fraction qu détermine le nombre de points.
+	# Comme ça notre dénominateur de stepLinspace devient le nombre de points (si on y ajoute 1 !)
+	#Par exemple : si on divise par 9 notre stapLinspace, on aura donc 9+1 = 10 points dans le linspace !
+	# Le domaine de def est défini par [min(Dataset) - h, max(Dataset) + h]
+	minDomain = min(datasetTotalVar) - h
+	maxDomain = max(datasetTotalVar) + h
+	stepLinspace = (math.floor(maxDomain-minDomain))/20  # ATTENTION Mettre un plus grand dénominateur pour les phases de test
+
+
 
 	lowProbabilities = []
 	hightProbabilities = []
 	# print('DATASET AVANT PASSAGE DANS KERNEL :', dataset)
-	tKernelTri = KernelContext(dataset, TriangularKernel(h), stepLinspace)
-
-	for pt in tKernelTri.domain:
+	tKernelTriGlobal = KernelContext(datasetTotalVar, TriangularKernel(h), stepLinspace)
+	tKernelTriClass = KernelContext(datasetClass, TriangularKernel(h), stepLinspace)
+	# print("Passage dans calculate Probability avec un nombre de points dans le domaine global qui vaut : ",len(tKernelTriGlobal.domain))
+	for pt in tKernelTriGlobal.domain:
 		# Def des structures qui vont récolter les données (dans la boucle pour une remise à 0 à chaque cycle
 		# lenDomain.append(len(tKernelTri.domain))
 
@@ -160,14 +242,14 @@ def calculateProbabilityImpreciseKernel(dataset, h, epsilon, N):
 		structHMax = {'potentialHValue': -1, 'maxedValue': -1}
 
 		# Calculs de f(hMax), et f(hMin)
-		structHMax = tKernelTri.computeHMaxFromInterval(pt, h, epsilon)
-		structHMin = tKernelTri.computeHMinFromInterval(pt, h, epsilon)
+		structHMax = tKernelTriClass.computeHMaxFromInterval(pt, h, epsilon)
+		structHMin = tKernelTriClass.computeHMinFromInterval(pt, h, epsilon)
 
 		hightProbabilities.append(structHMax['maxedValue'])
 		lowProbabilities.append(structHMin['minValue'])
 
 	# print('Hight probability = ', hightProbability)
-	return lowProbabilities, hightProbabilities, tKernelTri.domain
+	return lowProbabilities, hightProbabilities, tKernelTriGlobal.domain
 
 
 # Test calcul proba : IT WORKS !
@@ -214,10 +296,8 @@ the attribute probabilities for each class. the result is a map of class values 
 # FAIRE UNE INITIALISATION DES PARAMETRES POUR KERNEL IMPRECIS AVANT CETTE FONCTION
 # PASSER EN PARAMETRE CES DONNES POUR LA FONCTION SUIVANTE AFIN DE POUVOIR LANCER ComputeHMaxFromInterval
 
-def calculateClassProbabilitiesImpreciseKernel(dataset, columnWithClassResponse, inputVector,
-											   margeEpsilon):  # ,columnWithClassResponse): Pas important ici je pense
+def calculateClassProbabilitiesImpreciseKernel(dataset, columnWithClassResponse, margeEpsilon):
 	N = len(dataset)
-	firstStep = 1
 	separated = separateByClassWithoutResponse(dataset, columnWithClassResponse)
 	dataset2 = []
 	hOpt = []
@@ -233,32 +313,65 @@ def calculateClassProbabilitiesImpreciseKernel(dataset, columnWithClassResponse,
 	lowProbabilities = {}
 	hightProbabilities = {}
 	for classValue, classDataset in separated.items():
-		# print('classDataset :',classDataset)
+		# print('classValue :',classValue)
 		# print('len classDataset',len(classDataset))
 		# Separation des colonnes pour qu'une colonne corresponde à une seule variable d'entrée
 		# print('zip : ',zip(*classDataset))
 		classDatasetWithColSeparated = [attribute for attribute in zip(*classDataset)]
 		# print('class : ',classDatasetWithColSeparated)
 		# print(len(classDatasetWithColSeparated))
-		lowProbabilities[classValue] = 1  # Initialisation pour la multiplication ensuite des probas
-		hightProbabilities[classValue] = 1  # Initialisation pour la multiplication ensuite des probas
+		# Initialisation pour pouvoir stocker des tableaux selon le nombre de variables en entrée
+		lowProbabilities[classValue] = []
+		hightProbabilities[classValue] = []
+
+		# Initialisation de la frequence de la classe : estimateur de p(Y)
 		frequence_y = len(classDataset) / N
-		for i in range(len(classDatasetWithColSeparated)):
-			# print(i)
-			x = inputVector[i]
-			# print(x)
-			# Calcul toute la densité sur la classe et ensuite on assigne les prbas selon les points en entrée et en sortie
-			generalLowProbabilities, generalHightProbabilities, generalDomain = calculateProbabilityImpreciseKernel(
-				dataset=classDatasetWithColSeparated[i], h=hOpt[i], epsilon=margeEpsilon * hOpt[i], N=N)
-			lowProbability, hightProbability = findProbabilityImpreciseKernel(x, generalHightProbabilities,
-																			  generalDomain, generalLowProbabilities)
-			lowProbabilities[classValue] *= lowProbability
-			hightProbabilities[classValue] *= hightProbability
-		lowProbabilities[classValue] *= frequence_y  # multiplication par l'estimation de p(y)
-		hightProbabilities[classValue] *= frequence_y  # multiplication par l'estimation de p(y)
+
+		# Si on a au moins une var d'entree, alors on lance la machine. Sinon message d'erreur.
+		if(len(classDatasetWithColSeparated) != 0):
+			for i in range(len(classDatasetWithColSeparated)):
+				# print(i)
+				# Ici le vecteur d'entrée ne sert plus, on peut donc l'enlever de notre boucle de calcul.
+				# x = inputVector[i]
+				# print(x)
+				# Calcul toute la densité sur la classe et ensuite on assigne les prbas selon les points en entrée et en sortie
+				generalLowProbabilities, generalHightProbabilities, generalDomain = calculateProbabilityImpreciseKernel(datasetTotalVar=dataset2Separated[i],datasetClass=classDatasetWithColSeparated[i], h=hOpt[i], epsilon=margeEpsilon * hOpt[i], N=N)
+
+				###### ATTENTION ATTENTION ATTENTION
+				# On peut pas procéder comme suit, il faut un tableau à 3 dimensions : class, n*var correspondants aux entrées !
+				# if i == 0:
+					#Initialisation de chaque sous tableau de classe
+				#    lowProbabilities[classValue] = generalLowProbabilities
+				# On cherchera les probas dans la phase où on predira la classe,
+				#Le but ici est de retourner les tableaux complets de taille égale :) D'ou la mise en commentaire en dessous
+				# lowProbability, hightProbability = findProbabilityImpreciseKernel(x, generalHightProbabilities,generalDomain, generalLowProbabilities)
+				# else :
+					#Ici on fait le produit membre à membre de chaque tableau de chaque classe
+					#  pour les diférentes var au sein du système
+					# Le but étant d'avoir les tableaux de
+				#    lowProbabilities[classValue] *= lowProbability
+				#    hightProbabilities[classValue] *= hightProbability
+
+				##### IL FAUTDRA DONC PROCEDER COMME SUIT !
+				# Créer un tableau avec chaque classe et les données pour chaque var !
+				# Il faudra donc faire le produit de toutes les probas basses dans la fonction predict !
+				# print('lowProbabilities = ',lowProbabilities)
+				lowProbabilities[classValue].append(generalLowProbabilities)
+				hightProbabilities[classValue].append(generalHightProbabilities)
+
+			# On stocke en dernier sous tableau la frequence d'apparition de la classe !
+			lowProbabilities[classValue].append([frequence_y])
+			hightProbabilities[classValue].append([frequence_y])
+		else :
+			print('ERREUR : IL N\'EXISTE AUCUNE VARIABLE POUR PRESIRE !!!!!!')
+			break
 
 	# print(' frequence d apparition de la Classe value = ',classValue,'est de :',frequence_y,', avec une Probabilité haute = ',hightProbabilities[classValue],', et une probabilité basse :', lowProbabilities[classValue])
-	return lowProbabilities, hightProbabilities
+	# ATTENTION prévoir une sorti avec le domaine quand on appel la fonction.
+	#print('lowProbabilities = ',lowProbabilities)
+	#print('hightProbabilities = ', hightProbabilities)
+
+	return lowProbabilities, hightProbabilities, generalDomain
 
 
 # testLow=calculateClassLowProbabilitiesImpreciseKernel(dataset=[[1,3,2,5],[2,6,3,5],[1,4,4,5]],columnWithClassResponse=0,inputVector=[4,7,7],hOpt=10,margeEpsilon=0.5)
@@ -268,12 +381,19 @@ def calculateClassProbabilitiesImpreciseKernel(dataset, columnWithClassResponse,
 
 # Retourner 1 prediction avec 1 ou plusieurs classes :
 
-def predictImpreciseKernel(dataset, columnWithClassResponse, inputVector, margeEpsilon):
+
+###### CHANGEMENT A PREVOIR POUR FAIRE LA MAXIMALITE AVEC EN PARAMETRE LA SORTIE DU FIND PROBAS
+
+def predictImpreciseKernel(lowProbabilities, hightProbabilities, generalDomain, inputVector, margeEpsilon):
 	# calculateClassProbabilitiesImpreciseKernel(dataset,columnWithClassResponse,inputVector,margeEpsilon):
-	lowProbabilities, hightProbabilities = calculateClassProbabilitiesImpreciseKernel(dataset, columnWithClassResponse,
-																					  inputVector, margeEpsilon)
 	bestLabel = []
 	dominatedClass = []
+
+
+    # VOIR POUR UTILISER LA FONCTION FIND PROBABILITIES :)
+
+
+
 	# print('prediction de low probabilities : ',lowProbabilities)
 	for classValueLow, lowProba in lowProbabilities.items():
 		# print('class Value = ',classValueLow)
@@ -284,7 +404,7 @@ def predictImpreciseKernel(dataset, columnWithClassResponse, inputVector, margeE
 				if classValueHight not in dominatedClass:
 					if classValueHight != classValueLow:
 						# print('hightProba = ',hightProba)
-						if lowProba > hightProba and tjrsSup == 1:
+						if (lowProba/hightProba) > 1 and tjrsSup == 1:
 							dominatedClass.append(classValueHight)
 							tjrsSup = 1
 						else:
@@ -319,10 +439,20 @@ def predictImpreciseKernel(dataset, columnWithClassResponse, inputVector, margeE
 # testPredict=predictImpreciseKernel(dataset=[[1,3,2,5],[2,6,3,5],[1,3.5,2.2,5.1],[3,3,2,5],[3,3.5,2.2,5.1]],columnWithClassResponse=0,inputVector=[3.5,2.8,6],hOpt=5,margeEpsilon=0.1)
 # print('testpredict = ',testPredict)
 
+### CHANGEmMENT A FAIRE :
+# faire en sorte que le predict prenne en parametre:
+#           les dictionnaires low et hight + generalDomain
+# Ensuite on fait appel au calcul des probas hautes et basses par classe puis
+# On appel predict sur chaque point de vontre vecteur d'entrée : A METTRE EN PARAMETRE LORS DE L'APPEL
+# Le predict va utiliser le find( point d'entrée) et va nous retourner
+#  les probas hautes et basses jointes de cahque classe en fonction de notre point d'etude.
+
 # Predictions sur un jeu de test complet :
 def getPredictionsImpreciseKernel(dataset, columnWithClassResponse, testSet, margeEpsilon):
 	predictions = []
 	# print('test set passé en argument =',testSet)
+	lowProbabilities, hightProbabilities, generalDomain = calculateClassProbabilitiesImpreciseKernel(dataset,columnWithClassResponse,margeEpsilon)
+
 	for i in range(len(testSet)):
 		# print('test set de ',i,' = ',testSet[i])
 		result = predictImpreciseKernel(dataset, columnWithClassResponse, testSet[i], margeEpsilon)
@@ -373,19 +503,19 @@ def main():
 		testSet2.append(testSet[i][0:4])
 		valeurAttendue.append([testSet[i][4]])
 	# test model
-	predictionsPK = getPredictionsImpreciseKernel(dataset, columnWithClassResponse=-1, testSet=testSet2, margeEpsilon=0)
+	#predictionsPK = getPredictionsImpreciseKernel(dataset, columnWithClassResponse=-1, testSet=testSet2, margeEpsilon=0)
 	# La colonne avec la réponse de classe doit être 0 ou -1 (1ere ou dernière colonne du dataset passé en parametre
 	predictionsIK = getPredictionsImpreciseKernel(dataset, columnWithClassResponse=-1, testSet=testSet2, margeEpsilon=0.6)
-	print('predictions PK =', predictionsPK)
+	#print('predictions PK =', predictionsPK)
 	print('valeur atendue :', valeurAttendue)
-	print('predictions IK =', predictionsIK)  # le zip permet d'enlever les sous-tableaux quand on a 1 seule valeur
-	accuracyPK = getAccuracyImpreciseKernel(testSet, predictionsPK, (4))
+	#print('predictions IK =', predictionsIK)  # le zip permet d'enlever les sous-tableaux quand on a 1 seule valeur
+	#accuracyPK = getAccuracyImpreciseKernel(testSet, predictionsPK, (4))
 	accuracyIK = getAccuracyImpreciseKernel(testSet, predictionsIK, (4))
-	print('Accuracy Precise Kernel : ', accuracyPK)
+	#print('Accuracy Precise Kernel : ', accuracyPK)
 	print('Accuracy Imprecise Kernel : ', accuracyIK)
 
 
-# main()
+main()
 
 def launchXTimes(times):
 	for i in range(times):
@@ -394,7 +524,7 @@ def launchXTimes(times):
 		main()
 
 
-launchXTimes(1)
+#launchXTimes(1)
 
 
 # Tableaau des identifiants des réponses :
