@@ -375,6 +375,7 @@ def calculateProbabilityImpreciseKernel(datasetTotalVar, datasetClass, h, epsilo
 	# Le domaine de def est défini par [min(Dataset) - h, max(Dataset) + h]
 	minDomain = min(datasetTotalVar) - h
 	maxDomain = max(datasetTotalVar) + h
+
 	stepLinspace = (math.floor(maxDomain-minDomain))/nbPointsRegressionMoins1
 
 	# Creation des tableaux contenant les resultats pour la var en cours et la classe en cours
@@ -544,20 +545,31 @@ def getPredictionsImpreciseKernel(dataset, columnWithClassResponse, testSet, mar
 
 
 # 13 ) Moyenne des erreurs :
-def getAccuracyImpreciseKernel(testSet, predictions, columnWithClassResponse):
+def getAccuracyImpreciseKernel(testSet, predictions, columnWithClassResponse,u=0.65):
 	correct = 0
 	for x in range(len(testSet)):
-		# Penalite imprecise a ajouter
-		if testSet[x][columnWithClassResponse] in predictions[x]:
-			correct += 1  # insertion penalite
+		# Penalite imprecise avec le fontionnement (alpha/card(Y) - beta/(card(Y)^2)), u -> quand card Y = 2
+		if u == 0.5: # alpha=1 et beta = 0 -> a eviter !
+			if testSet[x][columnWithClassResponse] in predictions[x]:
+				correct += 1/len(predictions[x])
+		else:
+			if u == 0.65: # alpha=1.6 et beta = 0.6
+				if testSet[x][columnWithClassResponse] in predictions[x]:
+					correct += (1.6 / len(predictions[x]) - 0.6 / (len(predictions[x])**2))
+			else:
+				if u == 0.80: # alpha=2.2 et beta = 1.2
+					if testSet[x][columnWithClassResponse] in predictions[x]:
+						correct += (2.2 / len(predictions[x]) - 1.2 / (len(predictions[x]) ** 2))
+				else:
+					print('erreur dans le passage de parametre u qui doit être a valeur dans [0.5 , 0.65, 0.80]')
+
 	return (correct / float(len(testSet))) * 100.0
-# Voir pour apliquer le calcul avec u(y_star,Y) -> passer la forme alpha/beta
 
 
 # CODE POUR LANCER LES FONCTIONS ET PREDIRE :
 
 def main():
-	file = 'diabetes.data.csv'
+	file = 'Automobile.data.csv'
 	splitRatio = 0.50
 	dataset = loadCsv(file)
 	trainingSet, testSet = splitDataset(dataset, splitRatio)
@@ -568,20 +580,22 @@ def main():
 	testSet2 = []
 	valeurAttendue = []
 	for i in range(len(testSet)):
-		testSet2.append(testSet[i][:-1])
-		valeurAttendue.append([testSet[i][-1]])
+		testSet2.append(testSet[i][1:])
+		valeurAttendue.append([testSet[i][0]])
 	# test model
-	predictionsPK = getPredictionsImpreciseKernel(dataset, columnWithClassResponse=-1, testSet=testSet2, margeEpsilon=0)
+	predictionsPK = getPredictionsImpreciseKernel(dataset, columnWithClassResponse=0, testSet=testSet2, margeEpsilon=0)
 	# La colonne avec la réponse de classe doit être 0 ou -1 (1ere ou dernière colonne du dataset passé en parametre)
-	predictionsIK = getPredictionsImpreciseKernel(dataset, columnWithClassResponse=-1, testSet=testSet2, margeEpsilon=0.4)
+	predictionsIK = getPredictionsImpreciseKernel(dataset, columnWithClassResponse=0, testSet=testSet2, margeEpsilon=0.4)
 	print('predictions PK =', predictionsPK)
 	print('valeur atendue :', valeurAttendue)
 	print('predictions IK =', predictionsIK)
-	accuracyPK = getAccuracyImpreciseKernel(testSet, predictionsPK, (-1))
-	accuracyIK = getAccuracyImpreciseKernel(testSet, predictionsIK, (-1))
+	accuracyPK = getAccuracyImpreciseKernel(testSet, predictionsPK, (0))
+	accuracyIK65 = getAccuracyImpreciseKernel(testSet, predictionsIK, (0))
 	print('Accuracy Precise Kernel : ', accuracyPK)
-	print('Accuracy Imprecise Kernel : ', accuracyIK)
-	return accuracyPK, accuracyIK
+	print('Accuracy Imprecise Kernel u65 : ', accuracyIK65)
+	accuracyIK80 = getAccuracyImpreciseKernel(testSet, predictionsIK, (0),0.8)
+	print('Accuracy Imprecise Kernel u80 : ', accuracyIK80)
+	return accuracyPK, accuracyIK65, accuracyIK80
 
 #main()
 
@@ -592,16 +606,19 @@ def main():
 def launchXTimes(times):
 	result = []
 	meanPK = 0
-	meanIK = 0
+	meanIK65 = 0
+	meanIK80 = 0
 	for i in range(times):
 		# random.seed(i)
 		print('\n \n Resultats de l\'iteration : ', i + 1)
 		result.append(main())
 		meanPK += result[i][0]
-		meanIK += result[i][1]
+		meanIK65 += result[i][1]
+		meanIK80 += result[i][2]
 	meanPK /= times
-	meanIK /= times
-	print('\n \n Resultats precis moyens : ', meanPK, '\n \n Resultats imprecis moyen : ',meanIK)
+	meanIK65 /= times
+	meanIK80 /= times
+	print('\n \n Resultats precis moyens : ', meanPK, '\n \n Resultats imprecis moyen u65 : ',meanIK65,'\n \n Resultats imprecis moyen u80 : ',meanIK80)
 
 
 launchXTimes(10)
