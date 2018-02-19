@@ -6,7 +6,7 @@
 
 from classes.Kernels.TriangularKernel import TriangularKernel
 from classes.KernelContext import KernelContext
-
+import matplotlib.pyplot as plt
 
 # 1 ) On importe les données a format csv
 # Les donnees qualitatives sont transformees en donnees quantitatives
@@ -77,13 +77,18 @@ def separateByClass(dataset, columnWithClassResponse):
 # Le but etant d'avoir un hOpt avec toutes les donnees avant de faire la regression classe par classe.
 
 from statistics import stdev
+from statistics import mean
 
 def InitHOptKernelImprecise(dataset):
 	if len(dataset) == 0:
 		print('Erreur le dataset est vide pour l\'initialisation de hOpt')
 		return 0
 	sigma = stdev(dataset)
-	hOpt = 1.06 * sigma * (len(dataset)) ** (-1 / 5)
+	mean2 = mean(dataset)
+	if sigma != 0 :
+		hOpt = 1.06 * sigma * (len(dataset)) ** (-1 / 5)
+	else :
+		hOpt = 1.06 * mean2 * (len(dataset)) ** (-1 / 5)
 	return hOpt
 
 # 5) Division du dataset de test en enlevant la colonne de la réponse:
@@ -375,9 +380,12 @@ def calculateProbabilityImpreciseKernel(datasetTotalVar, datasetClass, h, epsilo
 	# Le domaine de def est défini par [min(Dataset) - h, max(Dataset) + h]
 	minDomain = min(datasetTotalVar) - h
 	maxDomain = max(datasetTotalVar) + h
-
-	stepLinspace = (math.floor(maxDomain-minDomain))/nbPointsRegressionMoins1
-
+	#print('max domain =',maxDomain,'min domain =',minDomain)
+	if (math.floor(maxDomain-minDomain) != 0):
+		stepLinspace = (math.floor(maxDomain-minDomain))/nbPointsRegressionMoins1
+	else:
+		stepLinspace = (maxDomain - minDomain) / nbPointsRegressionMoins1
+	#print('step : ', stepLinspace)
 	# Creation des tableaux contenant les resultats pour la var en cours et la classe en cours
 	lowProbabilities = []
 	hightProbabilities = []
@@ -566,62 +574,172 @@ def getAccuracyImpreciseKernel(testSet, predictions, columnWithClassResponse,u=0
 	return (correct / float(len(testSet))) * 100.0
 
 
+
+# Fonction qui permet de voir si les resultats imprecis données contiennent bien la bonne valeur.
+# Test sur tous les jeux de donnees.
+# But : avoir  les stats selon les jeux de donnees pour ensuite faire les graphes.
+def convertPreciseAndImprecisePredictionsToStats(predictions,datasets):
+	statsImpreciseResults = {}
+
+	for dataset in datasets:
+		#statsImpreciseResults[dataset]=[]
+		goodImprecisePrediction = 0
+		goodPrecisePrediction = 0
+		n = len(predictions[dataset])
+		# Iteration sur le nombre de resultats imprecis du dataset
+		for i in range(len(predictions[dataset])):
+			# On a un tableau de tableaux à 3 dimensions avec :
+			# - 0 : valeurs imprecises
+			# - 1 : valeur attendue
+			# - 2 : valeur precise
+			if predictions[dataset][i][1][0] in predictions[dataset][i][0]:
+				goodImprecisePrediction += 1
+			if predictions[dataset][i][1] == predictions[dataset][i][2]:
+				goodPrecisePrediction += 1
+		if n > 0:
+			statsImpreciseResults[dataset] = [(goodImprecisePrediction*100/n),(goodPrecisePrediction*100/n)]
+	return statsImpreciseResults
+
+
+# Code qui prend en parametre les statistiques (TP) precises et imprecises de tous les datasets pour en faire un graphe
+# Le graphe depend du epsilon passe en parametre, du split dans le dataset et du u (u65, u80)
+
+def statsToGraph(stats, splitRatio, margeEpsilon):
+	title = 'graph with epsilon = '+str(margeEpsilon)+' and split ratio = '+str(splitRatio)
+	plt.grid(True)
+	plt.title(title)
+	plt.plot([0,100],[0,100],linewidth=0.8)
+
+	# Boucle sur le dico
+	for stat in stats:
+		precis = stats[stat][1]
+		imprecis = stats[stat][0]
+		#print(' valeur precise :',precis,'\n valeur imprecise :',imprecis)
+		plt.plot(precis, imprecis,"b",marker="+")#"b", linewidth=0.8, marker="*", label="Trajet")
+		# annotatin : -1 en x et +2 en y
+		annoteX = precis - 1
+		annoteY = imprecis + 2
+		annoteValue = stat[0:2]
+		plt.annotate(annoteValue, xy=(precis, imprecis), xytext=(annoteX, annoteY))
+
+	# Fin boucle su dico
+	plt.axis([0, 110, 0, 110])
+	plt.xlabel('Precise accuracy')
+	plt.ylabel('Imprecise accuracy')
+	#plt.legend()
+	plt.show()
+
+
+#statsToGraph({'datatest' : [90,30], 'etetetet' : [80,40]},0.5,0.4,0.8)
+
 # CODE POUR LANCER LES FONCTIONS ET PREDIRE :
 
-def main():
-	file = 'Automobile.data.csv'
-	splitRatio = 0.50
+def launch(file,splitRatio,columnWithClassResponse=0,margeEpsilon=0.2):
 	dataset = loadCsv(file)
 	trainingSet, testSet = splitDataset(dataset, splitRatio)
 	# prepare model
-	print('Split ', len(dataset), ' rows into train=', len(trainingSet), ' and test=', len(testSet), ' rows')
+	#print('Split ', len(dataset), ' rows into train=', len(trainingSet), ' and test=', len(testSet), ' rows')
 	# summaries = summarizedByClass(trainingSet,columnWithClassResponse=4)
 	# print('testSet = ',testSet)
 	testSet2 = []
 	valeurAttendue = []
-	for i in range(len(testSet)):
-		testSet2.append(testSet[i][1:])
-		valeurAttendue.append([testSet[i][0]])
+	if columnWithClassResponse == 0:
+		for i in range(len(testSet)):
+			testSet2.append(testSet[i][1:])
+			valeurAttendue.append([testSet[i][0]])
+	else :
+		for i in range(len(testSet)):
+			testSet2.append(testSet[i][0:-1])
+			valeurAttendue.append([testSet[i][-1]])
 	# test model
-	predictionsPK = getPredictionsImpreciseKernel(dataset, columnWithClassResponse=0, testSet=testSet2, margeEpsilon=0)
+	predictionsPK = getPredictionsImpreciseKernel(dataset, columnWithClassResponse=columnWithClassResponse, testSet=testSet2, margeEpsilon=0)
 	# La colonne avec la réponse de classe doit être 0 ou -1 (1ere ou dernière colonne du dataset passé en parametre)
-	predictionsIK = getPredictionsImpreciseKernel(dataset, columnWithClassResponse=0, testSet=testSet2, margeEpsilon=0.4)
-	print('predictions PK =', predictionsPK)
-	print('valeur atendue :', valeurAttendue)
-	print('predictions IK =', predictionsIK)
-	accuracyPK = getAccuracyImpreciseKernel(testSet, predictionsPK, (0))
-	accuracyIK65 = getAccuracyImpreciseKernel(testSet, predictionsIK, (0))
-	print('Accuracy Precise Kernel : ', accuracyPK)
-	print('Accuracy Imprecise Kernel u65 : ', accuracyIK65)
-	accuracyIK80 = getAccuracyImpreciseKernel(testSet, predictionsIK, (0),0.8)
-	print('Accuracy Imprecise Kernel u80 : ', accuracyIK80)
-	return accuracyPK, accuracyIK65, accuracyIK80
+	predictionsIK = getPredictionsImpreciseKernel(dataset, columnWithClassResponse=columnWithClassResponse, testSet=testSet2, margeEpsilon=margeEpsilon)
+	#print('predictions PK =', predictionsPK)
+	#print('valeur atendue :', valeurAttendue)
+	#print('predictions IK =', predictionsIK)
+	accuracyPK = getAccuracyImpreciseKernel(testSet, predictionsPK, (columnWithClassResponse))
+	accuracyIK65 = getAccuracyImpreciseKernel(testSet, predictionsIK, (columnWithClassResponse))
+	#print('Accuracy Precise Kernel : ', accuracyPK)
+	#print('Accuracy Imprecise Kernel u65 : ', accuracyIK65)
+	accuracyIK80 = getAccuracyImpreciseKernel(testSet, predictionsIK, (columnWithClassResponse),0.80)
+	#print('Accuracy Imprecise Kernel u80 : ', accuracyIK80)
+
+	###########
+	# Retourner toutes les predictions precises et imprecises
+	# pour que l'on puisse faire les stats avec FP, FN, TP, TN
+	###########
+
+	return accuracyPK, accuracyIK65, accuracyIK80, predictionsPK, valeurAttendue, predictionsIK
 
 #main()
 
-
+import time
 # 14 ) Fonction qui lance plusieurs fois le test avec des repartitions de donnee differentes
 # Permet d'obtenir des moyennes
 # Attention, ce n'est pas de la cross validation pour autant.
-def launchXTimes(times):
-	result = []
-	meanPK = 0
-	meanIK65 = 0
-	meanIK80 = 0
-	for i in range(times):
-		# random.seed(i)
-		print('\n \n Resultats de l\'iteration : ', i + 1)
-		result.append(main())
-		meanPK += result[i][0]
-		meanIK65 += result[i][1]
-		meanIK80 += result[i][2]
-	meanPK /= times
-	meanIK65 /= times
-	meanIK80 /= times
-	print('\n \n Resultats precis moyens : ', meanPK, '\n \n Resultats imprecis moyen u65 : ',meanIK65,'\n \n Resultats imprecis moyen u80 : ',meanIK80)
+def launchXTimes(times,margeEpsilon,splitRatio,datasets):
+	file = open("/Users/USER/Guillaume/UTC/GI05_A17/TX02/Code_TX_A16_P-Wachalski_G-Dendievel/tx_kde/Test/results.txt","a")
+	date = time.localtime()
+	file.write("\n\n\n***********************\n Date : "+str(date)+"\n\nEpsilon : "+str(margeEpsilon)+"\nSplit ratio :"+str(splitRatio)+"\n\n")
+	print(' Epsilon = ',margeEpsilon)
+	print(' Split ratio = ', splitRatio)
+	# Creation d'un dictionnaire qui va contenir les resultats imprecis (de taille superieur a 1),
+	# et les resultats precis et attendus correspondants
+	impreciseResults = {}
+	for dataset in datasets :
+		impreciseResults[dataset]=[]
+		result = []
+		meanPK = 0
+		meanIK65 = 0
+		meanIK80 = 0
+		if dataset in ['forestType.data.csv','automobile.data.csv','wine.data.csv','BreastTissue_nettoye.data.csv','letter-recognition.data.csv'] :
+			columnWithClassResponse = 0
+		else :
+			columnWithClassResponse = -1
+
+		for i in range(times):
+			# random.seed(i)
+			#print('\n \n Resultats de l\'iteration : ', i + 1,'\n Dataset : ',dataset)
+			result.append(launch(dataset,splitRatio,columnWithClassResponse,margeEpsilon))
+			meanPK += result[i][0]
+			meanIK65 += result[i][1]
+			meanIK80 += result[i][2]
+			predictionsPK = result[i][3]
+			valeurAttendue = result[i][4]
+			predictionsIK = result[i][5]
+			#print('prediction ik : ',predictionsIK,'\nvalue : ',valeurAttendue,'\nprediction pk : ',predictionsPK)
+
+			# Boucle sur les resultats imprecis, on stocke precis, imprecis et valeur attendue si len(imprecis) > 1
+			for j in range(len(predictionsIK)):
+				if len(predictionsIK[j]) > 1:
+					impreciseResults[dataset].append([predictionsIK[j],valeurAttendue[j],predictionsPK[j]])
+					#print('Results imprecis = ',impreciseResults)
 
 
-launchXTimes(10)
+
+
+		####################
+		# Boucle sur les predictions et la valeur attendue.
+		# But : obtenir des vecteur ayant tous les cas a plusieurs classes du vecteur imprecis
+		# Ensuite on aura le vecteur de toutes les valeurs attendues précises
+		# Et de toutes les predictions precises
+		# Stocker tout ça dans des variables en fonction du dataset !
+		####################
+
+		meanPK /= times
+		meanIK65 /= times
+		meanIK80 /= times
+		print('\n Dataset : ',dataset,'\n Resultats precis moyens : ', meanPK, '\n Resultats imprecis moyen u65 : ',meanIK65,'\n Resultats imprecis moyen u80 : ',meanIK80)
+		file.write("\n Dataset : "+str(dataset)+"\n Resultats precis moyens : "+str(meanPK)+ "\n Resultats imprecis moyen u65 : "+str(meanIK65)+"\n Resultats imprecis moyen u80 : "+str(meanIK80)+"\n")
+
+	statsImpreciseResults = convertPreciseAndImprecisePredictionsToStats(impreciseResults, datasets)
+	#print('Stats : ',statsImpreciseResults)
+	statsToGraph(statsImpreciseResults, splitRatio, margeEpsilon)
+	file.write("\n\n\n***********************")
+	file.close()
+
+launchXTimes(10,.4,.5,['glass_clean.data.csv','BreastTissue_nettoye.data.csv','wine.data.csv','seeds_dataset.data.csv','segment.data.csv','iris.data.csv','automobile.data.csv','forestType.data.csv','dermatology_dataset.data.csv','diabetes.data.csv'])
 
 
 # Tableaau des identifiants des réponses IRIS :
