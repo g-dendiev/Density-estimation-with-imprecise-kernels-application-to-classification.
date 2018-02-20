@@ -86,9 +86,11 @@ def InitHOptKernelImprecise(dataset):
 	sigma = stdev(dataset)
 	mean2 = mean(dataset)
 	if sigma != 0 :
-		hOpt = 1.06 * sigma * (len(dataset)) ** (-1 / 5)
+		hOpt = 1.06 * sigma  * (len(dataset)) ** (-1 / 5)
 	else :
+		#print('ELSE     ****************************************')
 		hOpt = 1.06 * mean2 * (len(dataset)) ** (-1 / 5)
+	#print('\ndataset = ',dataset,'\nhOpt =',hOpt,'\n')
 	return hOpt
 
 # 5) Division du dataset de test en enlevant la colonne de la réponse:
@@ -237,7 +239,10 @@ def findProbabilityImpreciseKernel(generalLowProbabilities, generalHightProbabil
 					jMin = j
 
 			# On stocke nos probas de classe precises en cours
-			localPreciseProbabilities[classValue].append(tableauVarClassEnCours[0][jMin])
+			if tableauVarClassEnCours[0][jMin] == 0:
+				localPreciseProbabilities[classValue].append(0.01)
+			else :
+				localPreciseProbabilities[classValue].append(tableauVarClassEnCours[0][jMin])
 	#print('\n\nlocalPreciseProbabilities = ',localPreciseProbabilities)
 
 
@@ -283,7 +288,7 @@ def findProbabilityImpreciseKernel(generalLowProbabilities, generalHightProbabil
 			# On doit utiliser jMin dans le tableau de la 1ere ligne du tableau
 			if (tableauVarClassEnCours[0][jMin] == 0):
 				# On penalise par un petit coef fois la proba precise. Si ona 0 en precis alors on exclu la classe ensuite dans le predict !!
-				#print('valeur nulle en probabilite basse au point d\'etude ',inputVector[i],', du vecteur : ',inputVector,', on penalise par : ',penalite)
+				#print('classe : ',classValue,' valeur nulle en probabilite basse au point d\'etude ',inputVector[i],', du vecteur : ',inputVector,', on penalise par : ',penalite)
 				localLowProbabilities[classValue] *= penalite*localPreciseProbabilities[classValue][i]
 			else:
 				# On multiplie nos probas de classe par la probas de classe de la var en cours
@@ -502,6 +507,8 @@ def predictImpreciseKernel(lowProbabilities, hightProbabilities, preciseProbabil
 	# Initialisation
 	localLowProbabilities, localHightProbabilities = findProbabilityImpreciseKernel(lowProbabilities, hightProbabilities, preciseProbabilities, generalDomain, inputVector)
 
+	#print('\nmarge epsilon : ',margeEpsilon,'\nlocal low :',localLowProbabilities,'\n local hight :',localHightProbabilities)
+
 	# On itere sur l'ensemble des classes du tableau de probas basses qui ne sont pas dominees
 	for classValueLow, lowProba in localLowProbabilities.items():
 		# On stocke tous les labels de classe
@@ -542,6 +549,8 @@ def getPredictionsImpreciseKernel(dataset, columnWithClassResponse, testSet, mar
 
 	# Initialisation des probas hautes et basses, ainsi que du domaine de chaque variable
 	lowProbabilities, hightProbabilities, preciseProbabilities, generalDomain = calculateClassProbabilitiesImpreciseKernel(dataset,columnWithClassResponse,margeEpsilon)
+
+	#print('marge epsilon = ',margeEpsilon,'\nget prediction imprecise, low = ',lowProbabilities,'\nhight = ',hightProbabilities,'\nprecise = ',preciseProbabilities)
 
 	# Calcul de prediction pour chaque donnee de test
 	for i in range(len(testSet)):
@@ -606,31 +615,82 @@ def convertPreciseAndImprecisePredictionsToStats(predictions,datasets):
 
 def statsToGraph(stats, splitRatio, margeEpsilon):
 	title = 'graph with epsilon = '+str(margeEpsilon)+' and split ratio = '+str(splitRatio)
+	titlePDF = '/Users/USER/Guillaume/UTC/GI05_A17/TX02/Code_TX_A16_P-Wachalski_G-Dendievel/tx_kde/Test/'+title+'.pdf'
 	plt.grid(True)
 	plt.title(title)
 	plt.plot([0,100],[0,100],linewidth=0.8)
 
-	# Boucle sur le dico
+	statsTreated = []
+	statsCleaned = {}
+
+	# a : breast 106 /10 /6
+	# b : iris 150 /4 /3
+	# c : wine 178 /13 /3
+	# d : auto 205 /26 /7
+	# e : seed 210 /7 /3
+	# f : glass 214 / 9 / 7
+	# g : forest 325 /27 /4
+	# h : derma 366 /34 /6
+	# i : diabete 769/8/2
+	# j : segment 2310 /19 /7
+
+	# On inverse le dictionnaire selon les points et on ajoute les cigles si on a le meme point d'application
 	for stat in stats:
-		precis = stats[stat][1]
-		imprecis = stats[stat][0]
+		if stat not in statsTreated :
+
+			if stat[0:3] == 'Bre':
+				statsCleaned[stats[stat][1], stats[stat][0]] = 'a'
+			if stat[0:3] == 'iri':
+				statsCleaned[stats[stat][1], stats[stat][0]] = 'b'
+			if stat[0:3] == 'win':
+				statsCleaned[stats[stat][1], stats[stat][0]] = 'c'
+			if stat[0:3] == 'aut':
+				statsCleaned[stats[stat][1], stats[stat][0]] = 'd'
+			if stat[0:3] == 'see':
+				statsCleaned[stats[stat][1], stats[stat][0]] = 'e'
+			if stat[0:3] == 'gla':
+				statsCleaned[stats[stat][1], stats[stat][0]] = 'f'
+			if stat[0:3] == 'for':
+				statsCleaned[stats[stat][1], stats[stat][0]] = 'g'
+			if stat[0:3] == 'der':
+				statsCleaned[stats[stat][1], stats[stat][0]] = 'h'
+			if stat[0:3] == 'dia':
+				statsCleaned[stats[stat][1], stats[stat][0]] = 'i'
+			if stat[0:3] == 'seg':
+				statsCleaned[stats[stat][1], stats[stat][0]] = 'j'
+
+			#statsCleaned[stats[stat][1],stats[stat][0]] = stat[0:3]
+			#print('stat clean = ',statsCleaned)
+			statsTreated.append(stat)
+			for otherStats in stats :
+				if otherStats not in statsTreated :
+					if stats[stat][1] == stats[otherStats][1] and stats[stat][0] == stats[otherStats][0] :
+						statsCleaned[stats[stat][1], stats[stat][0]]+=(','+otherStats[0])
+						statsTreated.append(otherStats)
+
+	# Boucle sur le dico
+	for stat in statsCleaned:
+		precis = stat[0]
+		imprecis = stat[1]
 		#print(' valeur precise :',precis,'\n valeur imprecise :',imprecis)
 		plt.plot(precis, imprecis,"b",marker="+")#"b", linewidth=0.8, marker="*", label="Trajet")
 		# annotatin : -1 en x et +2 en y
 		annoteX = precis - 1
 		annoteY = imprecis + 2
-		annoteValue = stat[0:2]
+		annoteValue = statsCleaned[stat]
 		plt.annotate(annoteValue, xy=(precis, imprecis), xytext=(annoteX, annoteY))
 
 	# Fin boucle su dico
-	plt.axis([0, 110, 0, 110])
+	plt.axis([-5, 110, 0, 110])
 	plt.xlabel('Precise accuracy')
 	plt.ylabel('Imprecise accuracy')
 	#plt.legend()
-	plt.show()
+	plt.savefig(titlePDF)
+	plt.clf()
+	return
 
 
-#statsToGraph({'datatest' : [90,30], 'etetetet' : [80,40]},0.5,0.4,0.8)
+#statsToGraph({'datatest' : [90,30], 'etetetet' : [80,40],'prttetet' : [80,40]},0.5,0.4)
 
 # CODE POUR LANCER LES FONCTIONS ET PREDIRE :
 
@@ -693,6 +753,8 @@ def launchXTimes(times,margeEpsilon,splitRatio,datasets):
 		meanPK = 0
 		meanIK65 = 0
 		meanIK80 = 0
+		ratioImprecis = 0
+		denominateurImprecis = 0
 		if dataset in ['forestType.data.csv','automobile.data.csv','wine.data.csv','BreastTissue_nettoye.data.csv','letter-recognition.data.csv'] :
 			columnWithClassResponse = 0
 		else :
@@ -715,6 +777,8 @@ def launchXTimes(times,margeEpsilon,splitRatio,datasets):
 				if len(predictionsIK[j]) > 1:
 					impreciseResults[dataset].append([predictionsIK[j],valeurAttendue[j],predictionsPK[j]])
 					#print('Results imprecis = ',impreciseResults)
+			denominateurImprecis += (len(predictionsIK))
+		ratioImprecis = ((len(impreciseResults[dataset]))/denominateurImprecis)*100
 
 
 
@@ -730,38 +794,39 @@ def launchXTimes(times,margeEpsilon,splitRatio,datasets):
 		meanPK /= times
 		meanIK65 /= times
 		meanIK80 /= times
-		print('\n Dataset : ',dataset,'\n Resultats precis moyens : ', meanPK, '\n Resultats imprecis moyen u65 : ',meanIK65,'\n Resultats imprecis moyen u80 : ',meanIK80)
-		file.write("\n Dataset : "+str(dataset)+"\n Resultats precis moyens : "+str(meanPK)+ "\n Resultats imprecis moyen u65 : "+str(meanIK65)+"\n Resultats imprecis moyen u80 : "+str(meanIK80)+"\n")
+		print('\n Dataset : ',dataset,'\n Resultats precis moyens : ', meanPK, '\n Resultats imprecis moyen u65 : ',meanIK65,'\n Resultats imprecis moyen u80 : ',meanIK80,'\n Ratio imprecis : ',ratioImprecis)
+		file.write("\n Dataset : "+str(dataset)+"\n Resultats precis moyens : "+str(meanPK)+ "\n Resultats imprecis moyen u65 : "+str(meanIK65)+"\n Resultats imprecis moyen u80 : "+str(meanIK80)+"\n Ratio imprecis : "+str(ratioImprecis)+"\n")
 
 	statsImpreciseResults = convertPreciseAndImprecisePredictionsToStats(impreciseResults, datasets)
 	#print('Stats : ',statsImpreciseResults)
 	statsToGraph(statsImpreciseResults, splitRatio, margeEpsilon)
 	file.write("\n\n\n***********************")
 	file.close()
-
-launchXTimes(10,.4,.5,['glass_clean.data.csv','BreastTissue_nettoye.data.csv','wine.data.csv','seeds_dataset.data.csv','segment.data.csv','iris.data.csv','automobile.data.csv','forestType.data.csv','dermatology_dataset.data.csv','diabetes.data.csv'])
-
-
-# Tableaau des identifiants des réponses IRIS :
-# 0 = setosa
-# 1 = versicolor
-# 2 = virginica
-# Colonnes :
-#SE_L, N, 4, 0
-#SE_W, N, 4, 0
-#PE_L, N, 4, 0
-#PE_W, N, 4, 0
-#ESPECE, C, 20
+	return
 
 
+def main():
+	for margeEpsilon in [0.1,0.2,0.4]:
+		for splitRatio in [0.3,0.5,0.75]: # Calculer le ratio d'imprécis pour pouvoir mettre en lien avec notre tableau !
+			launchXTimes(10,margeEpsilon,splitRatio,['glass_clean.data.csv','BreastTissue_nettoye.data.csv','wine.data.csv','seeds_dataset.data.csv','segment.data.csv','iris.data.csv','automobile.data.csv','forestType.data.csv','dermatology_dataset.data.csv','diabetes.data.csv'])
 
-# Tableau colonnes diabetes :
-# Pregnancies
-# Glucose
-# BloodPressure
-# SkinThickness
-# Insulin
-# BMI
-# DiabetesPedigreeFunction
-# Age
-# Outcome
+main()
+
+# Orga : nb valeur /nb var /nb class
+
+# a : breast 106 /10 /6
+# b : iris 150 /4 /3
+# c : wine 178 /13 /3
+# d : auto 205 /26 /7
+# e : seed 210 /7 /3
+# f : glass 214 / 9 / 7
+# g : forest 325 /27 /4
+# h : derma 366 /34 /6
+# i : diabete 769/8/2
+# j : segment 2310 /19 /7
+
+
+
+# Voir pour debuger au niveau de la prédiction car on a en précis des choses imprécises.
+# Voir pour faire tourner random forest sur les jeux de donnees afin d'avoir une idee des resultats.
+# Rendez-vous 9h Jeudi matin !
