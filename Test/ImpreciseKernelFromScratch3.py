@@ -7,6 +7,7 @@
 from classes.Kernels.TriangularKernel import TriangularKernel
 from classes.KernelContext import KernelContext
 import matplotlib.pyplot as plt
+import time
 
 # 1 ) On importe les données a format csv
 # Les donnees qualitatives sont transformees en donnees quantitatives
@@ -614,8 +615,9 @@ def convertPreciseAndImprecisePredictionsToStats(predictions,datasets):
 # Le graphe depend du epsilon passe en parametre, du split dans le dataset et du u (u65, u80)
 
 def statsToGraph(stats, splitRatio, margeEpsilon):
+	date = time.localtime()
 	title = 'graph with epsilon = '+str(margeEpsilon)+' and split ratio = '+str(splitRatio)
-	titlePDF = '/Users/USER/Guillaume/UTC/GI05_A17/TX02/Code_TX_A16_P-Wachalski_G-Dendievel/tx_kde/Test/'+title+'.pdf'
+	titlePDF = '/Users/USER/Guillaume/UTC/GI05_A17/TX02/Code_TX_A16_P-Wachalski_G-Dendievel/tx_kde/Test/'+title+str(date)+'.pdf'
 	plt.grid(True)
 	plt.title(title)
 	plt.plot([0,100],[0,100],linewidth=0.8)
@@ -734,7 +736,7 @@ def launch(file,splitRatio,columnWithClassResponse=0,margeEpsilon=0.2):
 
 #main()
 
-import time
+
 # 14 ) Fonction qui lance plusieurs fois le test avec des repartitions de donnee differentes
 # Permet d'obtenir des moyennes
 # Attention, ce n'est pas de la cross validation pour autant.
@@ -794,8 +796,8 @@ def launchXTimes(times,margeEpsilon,splitRatio,datasets):
 		meanPK /= times
 		meanIK65 /= times
 		meanIK80 /= times
-		print('\n Dataset : ',dataset,'\n Resultats precis moyens : ', meanPK, '\n Resultats imprecis moyen u65 : ',meanIK65,'\n Resultats imprecis moyen u80 : ',meanIK80,'\n Ratio imprecis : ',ratioImprecis)
-		file.write("\n Dataset : "+str(dataset)+"\n Resultats precis moyens : "+str(meanPK)+ "\n Resultats imprecis moyen u65 : "+str(meanIK65)+"\n Resultats imprecis moyen u80 : "+str(meanIK80)+"\n Ratio imprecis : "+str(ratioImprecis)+"\n")
+		print('\n Dataset : ',dataset,'\n Resultats precis moyens : ', meanPK, '\n Resultats imprecis moyen u65 : ',meanIK65,'\n Resultats imprecis moyen u80 : ',meanIK80,'\n Ratio imprecis : ',ratioImprecis,'\nResultats imprecis [[[IK_1],TrueValue_1,PK_1],[[IK_2],TrueValue_2,PK_2],...]: ',impreciseResults[dataset],'\n')
+		file.write("\n Dataset : "+str(dataset)+"\n Resultats precis moyens : "+str(meanPK)+ "\n Resultats imprecis moyen u65 : "+str(meanIK65)+"\n Resultats imprecis moyen u80 : "+str(meanIK80)+"\n Ratio imprecis : "+str(ratioImprecis)+"\nResultats imprecis [[[IK_1],TrueValue_1,PK_1],[[IK_2],TrueValue_2,PK_2],...]: "+str(impreciseResults[dataset])+"\n")
 
 	statsImpreciseResults = convertPreciseAndImprecisePredictionsToStats(impreciseResults, datasets)
 	#print('Stats : ',statsImpreciseResults)
