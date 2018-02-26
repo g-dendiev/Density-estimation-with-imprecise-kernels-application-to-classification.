@@ -592,6 +592,8 @@ def convertPreciseAndImprecisePredictionsToStats(predictions,datasets):
 	statsImpreciseResults = {}
 
 	for dataset in datasets:
+
+
 		#statsImpreciseResults[dataset]=[]
 		goodImprecisePrediction = 0
 		goodPrecisePrediction = 0
@@ -603,7 +605,7 @@ def convertPreciseAndImprecisePredictionsToStats(predictions,datasets):
 			# - 1 : valeur attendue
 			# - 2 : valeur precise
 			if predictions[dataset][i][1][0] in predictions[dataset][i][0]:
-				goodImprecisePrediction += 1
+				goodImprecisePredictionTotal += 1
 			if predictions[dataset][i][1] == predictions[dataset][i][2]:
 				goodPrecisePrediction += 1
 		if n > 0:
@@ -750,13 +752,29 @@ def launchXTimes(times,margeEpsilon,splitRatio,datasets):
 	# et les resultats precis et attendus correspondants
 	impreciseResults = {}
 	for dataset in datasets :
+		lenMax = 0
+		if dataset[0:3] == 'Bre' or dataset[0:3] == 'der':
+			lenMax = 6
+		if dataset[0:3] == 'iri' or dataset[0:3] == 'win' or dataset[0:3] == 'see':
+			lenMax = 3
+		if dataset[0:3] == 'aut' or dataset[0:3] == 'gla' or dataset[0:3] == 'seg':
+			lenMax = 7
+		if dataset[0:3] == 'for':
+			lenMax = 4
+		if dataset[0:3] == 'dia':
+			lenMax = 2
 		impreciseResults[dataset]=[]
 		result = []
 		meanPK = 0
 		meanIK65 = 0
 		meanIK80 = 0
 		ratioImprecis = 0
+		nbResultPartiel = 0
+		imprecisTotal = 0
+		imprecisPartiel = 0
 		denominateurImprecis = 0
+		imprecisPartielCarre = 0
+		stdevLongueurResultsImprecis = 0
 		if dataset in ['forestType.data.csv','automobile.data.csv','wine.data.csv','BreastTissue_nettoye.data.csv','letter-recognition.data.csv'] :
 			columnWithClassResponse = 0
 		else :
@@ -774,18 +792,33 @@ def launchXTimes(times,margeEpsilon,splitRatio,datasets):
 			predictionsIK = result[i][5]
 			#print('prediction ik : ',predictionsIK,'\nvalue : ',valeurAttendue,'\nprediction pk : ',predictionsPK)
 
-			# Boucle sur les resultats imprecis, on stocke precis, imprecis et valeur attendue si len(imprecis) > 1
+			# Boucle sur les resultats imprecis, on stocke imprecis, valeur attendue et precise si len(imprecis) > 1
 			for j in range(len(predictionsIK)):
 				if len(predictionsIK[j]) > 1:
 					impreciseResults[dataset].append([predictionsIK[j],valeurAttendue[j],predictionsPK[j]])
 					#print('Results imprecis = ',impreciseResults)
+					if len(predictionsIK[j]) == lenMax :
+						imprecisTotal += 1
+					else :
+						imprecisPartiel += len(predictionsIK[j])
+						imprecisPartielCarre += (len(predictionsIK[j])*len(predictionsIK[j]))
+						nbResultPartiel += 1
 			denominateurImprecis += (len(predictionsIK))
+		#print('\n nb imprecis partiel :',nbResultPartiel,'\n nb imprecis total : ',imprecisTotal,'\n denominateur imprecis :',denominateurImprecis)
 		ratioImprecis = ((len(impreciseResults[dataset]))/denominateurImprecis)*100
+		ratioImprecisPartiel = (nbResultPartiel/denominateurImprecis)*100
+		ratioImprecisTotal = (imprecisTotal/denominateurImprecis)*100
+		if nbResultPartiel != 0 :
+			moyenneLongueurResultsImprecis = imprecisPartiel/nbResultPartiel
+			stdevLongueurResultsImprecis = ((1/nbResultPartiel)*(imprecisPartielCarre) - moyenneLongueurResultsImprecis*moyenneLongueurResultsImprecis)**(1/2)
+		else :
+			moyenneLongueurResultsImprecis = 0
+			stdevLongueurResultsImprecis = 0
 
 
 
 
-		####################
+####################
 		# Boucle sur les predictions et la valeur attendue.
 		# But : obtenir des vecteur ayant tous les cas a plusieurs classes du vecteur imprecis
 		# Ensuite on aura le vecteur de toutes les valeurs attendues précises
@@ -796,8 +829,8 @@ def launchXTimes(times,margeEpsilon,splitRatio,datasets):
 		meanPK /= times
 		meanIK65 /= times
 		meanIK80 /= times
-		print('\n Dataset : ',dataset,'\n Resultats precis moyens : ', meanPK, '\n Resultats imprecis moyen u65 : ',meanIK65,'\n Resultats imprecis moyen u80 : ',meanIK80,'\n Ratio imprecis : ',ratioImprecis,'\nResultats imprecis [[[IK_1],TrueValue_1,PK_1],[[IK_2],TrueValue_2,PK_2],...]: ',impreciseResults[dataset],'\n')
-		file.write("\n Dataset : "+str(dataset)+"\n Resultats precis moyens : "+str(meanPK)+ "\n Resultats imprecis moyen u65 : "+str(meanIK65)+"\n Resultats imprecis moyen u80 : "+str(meanIK80)+"\n Ratio imprecis : "+str(ratioImprecis)+"\nResultats imprecis [[[IK_1],TrueValue_1,PK_1],[[IK_2],TrueValue_2,PK_2],...]: "+str(impreciseResults[dataset])+"\n")
+		print('\n Dataset : ',dataset,'\n Resultats precis moyens : ', meanPK, '\n Resultats imprecis moyen u65 : ',meanIK65,'\n Resultats imprecis moyen u80 : ',meanIK80,'\n Ratio imprecis : ',ratioImprecis,'\n Ratio imprecis total : ',ratioImprecisTotal,'\n Ratio imprecis partiel : ',ratioImprecisPartiel,'\n Moyenne du nombre de classes retournées en imprécis partiel : ',moyenneLongueurResultsImprecis,'\n ecart type nb classes imprecises partiel : ',stdevLongueurResultsImprecis,'\nResultats imprecis [[[IK_1],TrueValue_1,PK_1],[[IK_2],TrueValue_2,PK_2],...]: ',impreciseResults[dataset],'\n')
+		file.write("\n Dataset : "+str(dataset)+"\n Resultats precis moyens : "+str(meanPK)+ "\n Resultats imprecis moyen u65 : "+str(meanIK65)+"\n Resultats imprecis moyen u80 : "+str(meanIK80)+"\n Ratio imprecis : "+str(ratioImprecis)+"\n Ratio imprecis total : "+str(ratioImprecisTotal)+"\n Ratio imprecis partiel : "+str(ratioImprecisPartiel)+"\n Moyenne du nombre de classes retournées en imprécis partiel : "+str(moyenneLongueurResultsImprecis)+"\n ecart type nb classes imprecises partiel : "+str(stdevLongueurResultsImprecis)+"\nResultats imprecis [[[IK_1],TrueValue_1,PK_1],[[IK_2],TrueValue_2,PK_2],...]: "+str(impreciseResults[dataset])+"\n")
 
 	statsImpreciseResults = convertPreciseAndImprecisePredictionsToStats(impreciseResults, datasets)
 	#print('Stats : ',statsImpreciseResults)
@@ -813,6 +846,9 @@ def main():
 			launchXTimes(10,margeEpsilon,splitRatio,['glass_clean.data.csv','BreastTissue_nettoye.data.csv','wine.data.csv','seeds_dataset.data.csv','segment.data.csv','iris.data.csv','automobile.data.csv','forestType.data.csv','dermatology_dataset.data.csv','diabetes.data.csv'])
 
 main()
+
+# tableau : 1 tableau pour 1 parametre qui change ! split et epsilon
+# Faire un calcul avec ratio : imprecis partiel, imprecis total ! -> revoir le calcul du ratio !
 
 # Orga : nb valeur /nb var /nb class
 
@@ -832,3 +868,7 @@ main()
 # Voir pour debuger au niveau de la prédiction car on a en précis des choses imprécises.
 # Voir pour faire tourner random forest sur les jeux de donnees afin d'avoir une idee des resultats.
 # Rendez-vous 9h Jeudi matin !
+
+#p <=> q
+#p => q (nécessaire)
+#q => p (suffisant)
