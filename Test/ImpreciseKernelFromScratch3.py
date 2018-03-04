@@ -605,7 +605,7 @@ def convertPreciseAndImprecisePredictionsToStats(predictions,datasets):
 			# - 1 : valeur attendue
 			# - 2 : valeur precise
 			if predictions[dataset][i][1][0] in predictions[dataset][i][0]:
-				goodImprecisePredictionTotal += 1
+				goodImprecisePrediction += 1
 			if predictions[dataset][i][1] == predictions[dataset][i][2]:
 				goodPrecisePrediction += 1
 		if n > 0:
@@ -698,7 +698,8 @@ def statsToGraph(stats, splitRatio, margeEpsilon):
 
 # CODE POUR LANCER LES FONCTIONS ET PREDIRE :
 
-def launch(file,splitRatio,columnWithClassResponse=0,margeEpsilon=0.2):
+def launch(file,splitRatio,rand,columnWithClassResponse=0,margeEpsilon=0.2):
+	random.seed(rand)
 	dataset = loadCsv(file)
 	trainingSet, testSet = splitDataset(dataset, splitRatio)
 	# prepare model
@@ -781,9 +782,9 @@ def launchXTimes(times,margeEpsilon,splitRatio,datasets):
 			columnWithClassResponse = -1
 
 		for i in range(times):
-			# random.seed(i)
+			random.seed(i)
 			#print('\n \n Resultats de l\'iteration : ', i + 1,'\n Dataset : ',dataset)
-			result.append(launch(dataset,splitRatio,columnWithClassResponse,margeEpsilon))
+			result.append(launch(dataset,splitRatio,i,columnWithClassResponse,margeEpsilon))
 			meanPK += result[i][0]
 			meanIK65 += result[i][1]
 			meanIK80 += result[i][2]
@@ -843,7 +844,7 @@ def launchXTimes(times,margeEpsilon,splitRatio,datasets):
 def main():
 	for margeEpsilon in [0.1,0.2,0.4]:
 		for splitRatio in [0.3,0.5,0.75]: # Calculer le ratio d'imprécis pour pouvoir mettre en lien avec notre tableau !
-			launchXTimes(10,margeEpsilon,splitRatio,['glass_clean.data.csv','BreastTissue_nettoye.data.csv','wine.data.csv','seeds_dataset.data.csv','segment.data.csv','iris.data.csv','automobile.data.csv','forestType.data.csv','dermatology_dataset.data.csv','diabetes.data.csv'])
+			launchXTimes(10,margeEpsilon,splitRatio,['BreastTissue_nettoye.data.csv','iris.data.csv','wine.data.csv','automobile.data.csv','seeds_dataset.data.csv','glass_clean.data.csv','forestType.data.csv','dermatology_dataset.data.csv','diabetes.data.csv','segment.data.csv'])
 
 main()
 
