@@ -868,8 +868,3 @@ main()
 
 # Voir pour debuger au niveau de la prédiction car on a en précis des choses imprécises.
 # Voir pour faire tourner random forest sur les jeux de donnees afin d'avoir une idee des resultats.
-# Rendez-vous 9h Jeudi matin !
-
-#p <=> q
-#p => q (nécessaire)
-#q => p (suffisant)
