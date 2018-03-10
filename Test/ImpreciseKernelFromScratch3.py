@@ -585,7 +585,7 @@ def getAccuracyImpreciseKernel(testSet, predictions, columnWithClassResponse,u=0
 
 
 
-# Fonction qui permet de voir si les resultats imprecis données contiennent bien la bonne valeur.
+# 14) Fonction qui permet de voir si les resultats imprecis données contiennent bien la bonne valeur.
 # Test sur tous les jeux de donnees.
 # But : avoir  les stats selon les jeux de donnees pour ensuite faire les graphes.
 def convertPreciseAndImprecisePredictionsToStats(predictions,datasets):
@@ -613,7 +613,7 @@ def convertPreciseAndImprecisePredictionsToStats(predictions,datasets):
 	return statsImpreciseResults
 
 
-# Code qui prend en parametre les statistiques (TP) precises et imprecises de tous les datasets pour en faire un graphe
+# 15)Code qui prend en parametre les statistiques (TP) precises et imprecises de tous les datasets pour en faire un graphe
 # Le graphe depend du epsilon passe en parametre, du split dans le dataset et du u (u65, u80)
 
 def statsToGraph(stats, splitRatio, margeEpsilon):
@@ -696,7 +696,7 @@ def statsToGraph(stats, splitRatio, margeEpsilon):
 
 #statsToGraph({'datatest' : [90,30], 'etetetet' : [80,40],'prttetet' : [80,40]},0.5,0.4)
 
-# CODE POUR LANCER LES FONCTIONS ET PREDIRE :
+# 16) code pour lancer les fonctions une fois et predire :
 
 def launch(file,splitRatio,rand,columnWithClassResponse=0,margeEpsilon=0.2):
 	random.seed(rand)
@@ -740,7 +740,7 @@ def launch(file,splitRatio,rand,columnWithClassResponse=0,margeEpsilon=0.2):
 #main()
 
 
-# 14 ) Fonction qui lance plusieurs fois le test avec des repartitions de donnee differentes
+# 17 ) Fonction qui lance plusieurs fois le test avec des repartitions de donnee differentes
 # Permet d'obtenir des moyennes
 # Attention, ce n'est pas de la cross validation pour autant.
 def launchXTimes(times,margeEpsilon,splitRatio,datasets):
@@ -848,8 +848,7 @@ def main():
 
 main()
 
-# tableau : 1 tableau pour 1 parametre qui change ! split et epsilon
-# Faire un calcul avec ratio : imprecis partiel, imprecis total ! -> revoir le calcul du ratio !
+
 
 # Orga : nb valeur /nb var /nb class
 
@@ -864,7 +863,4 @@ main()
 # i : diabete 769/8/2
 # j : segment 2310 /19 /7
 
-
-
-# Voir pour debuger au niveau de la prédiction car on a en précis des choses imprécises.
 # Voir pour faire tourner random forest sur les jeux de donnees afin d'avoir une idee des resultats.
