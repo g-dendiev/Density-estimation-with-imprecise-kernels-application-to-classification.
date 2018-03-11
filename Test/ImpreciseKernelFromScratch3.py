@@ -8,6 +8,7 @@ from classes.Kernels.TriangularKernel import TriangularKernel
 from classes.KernelContext import KernelContext
 import matplotlib.pyplot as plt
 import time
+import math
 
 # 1 ) On importe les données a format csv
 # Les donnees qualitatives sont transformees en donnees quantitatives
@@ -25,7 +26,8 @@ def loadCsv(filename):
 			try: # Conversion en float
 				dataset[i][j] = float(dataset[i][j])
 			except: # Conversion en int en passant par un dico clef valeur
-				# Passage quantitatif a qualitatif !
+				# Passage quantitatif a qualitatif
+				# -> utilisation a éviter, notre publi se base sur des datasets quantitatifs
 				if dataset[i][j] not in dictionnaire.keys():
 					dictionnaire[dataset[i][j]] = dictKey
 					dictKey += 1
@@ -33,6 +35,11 @@ def loadCsv(filename):
 				else:
 					dataset[i][j] = dictionnaire[dataset[i][j]]
 	return dataset
+#Test import :
+#filename = 'BreastTissue_nettoye.data.csv'
+#dataset = loadCsv(filename=filename)
+#print('load data : ',filename, 'avec', len(dataset) ,'lignes ')
+
 
 
 # 2) Séparation des données
@@ -53,6 +60,14 @@ def splitDataset(dataset, splitRatio):
 		trainSet.append(copy.pop(index))
 	return [trainSet, copy]
 
+# Test split :
+#dataset = [[1],[2],[3],[4],[5]]
+#splitRatio = (2/3)
+#train, test = splitDataset(dataset=dataset, splitRatio=splitRatio)
+#print('on a split avec en train :',train,'et en test : ',test)
+
+
+
 # 3) Separation des donnees d'apprentissage par classe
 
 # On ajoute une variable qui définit la colonne qui contient la réponse = la classe dans le dataset
@@ -70,9 +85,19 @@ def separateByClass(dataset, columnWithClassResponse):
 		separated[vector[columnWithClassResponse]].append(vector)
 	return separated
 
+# Test separation des donnees :
+#dataset = [[1,20,1],[2,34,4],[1,34,4],[2,20,1]]
+#separated0 = separateByClass(dataset=dataset, columnWithClassResponse=0)
+#separated1 = separateByClass(dataset=dataset, columnWithClassResponse=1)
+#separated_1 = separateByClass(dataset=dataset, columnWithClassResponse=-1)
+#print('separation 1 sur col 0', separated0)
+#print('separation 2 sur col 1 : ', separated1) #print error !
+#print('separation 3 sur col -1', separated_1)
+
+
+
 
 # 4) Initialisation du hOpt pour un dataset donnee
-
 # Note : on passe en parametre toutes les donnees d'une var.
 # On fera donc n appels a cette fonction pour n var differentes.
 # Le but etant d'avoir un hOpt avec toutes les donnees avant de faire la regression classe par classe.
@@ -94,8 +119,14 @@ def InitHOptKernelImprecise(dataset):
 	#print('\ndataset = ',dataset,'\nhOpt =',hOpt,'\n')
 	return hOpt
 
-# 5) Division du dataset de test en enlevant la colonne de la réponse:
+#Test InitHOptKernelImprecise:
+#dataset = [27,32,34,25]
+#hOpt = InitHOptKernelImprecise(dataset)
+#print(' hOpt = ',hOpt)
 
+
+
+# 5) Division du dataset de test en enlevant la colonne de la réponse:
 # On ajoute une variable qui définit la colonne qui contient la réponse = la classe dans le dataset
 # columnWithClassResponse doit être la premiere colonne (0) ou la dernière (-1)
 def separateByClassWithoutResponse(dataset, columnWithClassResponse):
@@ -117,6 +148,14 @@ def separateByClassWithoutResponse(dataset, columnWithClassResponse):
 			separated[vector[columnWithClassResponse]].append(vector[1:])
 	return separated
 
+# Test separation des donnees sans colonne reponse :
+#dataset = [[1,20,1],[2,34,4],[1,34,4],[2,20,1]]
+#separated0 = separateByClassWithoutResponse(dataset=dataset, columnWithClassResponse=0)
+#separated1 = separateByClassWithoutResponse(dataset=dataset, columnWithClassResponse=1)
+#separated_1 = separateByClassWithoutResponse(dataset=dataset, columnWithClassResponse=-1)
+#print('separation 1 sur col 0', separated0)
+#print('separation 2 sur col 1 : ', separated1) #print error !
+#print('separation 3 sur col -1', separated_1)
 
 
 
@@ -144,26 +183,19 @@ def separateFrequence(generalLowProbabilities,generalHightProbabilities, general
 		generalPreciseProbabilitiesWithoutFrequence[classValue] = []
 		for i in (range(n-1)): # On recopie tout sauf la deniere colonne
 			generalPreciseProbabilitiesWithoutFrequence[classValue].append(tabResult[i])
-	#print('\n len generalLowProbabilitiesWithoutFrequence classe 0 : ',len(generalLowProbabilitiesWithoutFrequence[0]),'\n len generalHightProbabilitiesWithoutFrequence classe 0 : ',len(generalHightProbabilitiesWithoutFrequence[0]), '\n len generalPreciseProbabilitiesWithoutFrequence de classe 0 : ',len(generalPreciseProbabilitiesWithoutFrequence[0]),'\n fin separate frequence.')
+	#print('\n len generalLowProbabilitiesWithoutFrequence classe 0 : ',generalLowProbabilitiesWithoutFrequence,'\n len generalHightProbabilitiesWithoutFrequence classe 0 : ',generalHightProbabilitiesWithoutFrequence, '\n len generalPreciseProbabilitiesWithoutFrequence de classe 0 : ',generalPreciseProbabilitiesWithoutFrequence,'\n fin separate frequence.')
 	return generalLowProbabilitiesWithoutFrequence,generalHightProbabilitiesWithoutFrequence,generalPreciseProbabilitiesWithoutFrequence, frequence_y
 
+# Test separation de la frequence :
+#generalLowProbabilities={1:[[.05,.4,.4,.05],[.2,.3,.3,.1],[.2,.3,.3,.1],[0.7]], 2:[[.1,.1,.1,.6],[.1,.1,.1,.6],[.1,.1,.1,.6],[0.3]]}
+#generalHightProbabilities={1:[[.05,.45,.45,.05],[.2,.35,.35,.1],[.2,.35,.35,.1],[0.7]], 2:[[.1,.1,.15,.65],[.1,.1,.15,.65],[.1,.1,.15,.65],[0.3]]}
+#generalPreciseProbabilities={1:[[.05,.45,.45,.05],[.2,.35,.35,.1],[.2,.35,.35,.1],[0.7]], 2:[[.1,.1,.15,.65],[.1,.1,.15,.65],[.1,.1,.15,.65],[0.3]]}
+#generalLowProbabilitiesWithoutFrequence,generalHightProbabilitiesWithoutFrequence,generalPreciseProbabilitiesWithoutFrequence, frequence_y = separateFrequence(generalLowProbabilities,generalHightProbabilities, generalPreciseProbabilities)
+#print('\n  generalLowProbabilitiesWithoutFrequence : ',generalLowProbabilitiesWithoutFrequence,'\n  generalHightProbabilitiesWithoutFrequence : ',generalHightProbabilitiesWithoutFrequence, '\n  generalPreciseProbabilitiesWithoutFrequence  : ',generalPreciseProbabilitiesWithoutFrequence,'\n frequence : ',frequence_y,'\n fin separate frequence.')
 
 
 
-
-# 7) Calculs lies a l'utilisation de nos implementations des kernels
-import math
-
-def calculsDi(x, Xi):
-	sumDi = 0
-	for i in range(len(Xi)):
-		sumDi += abs(x - Xi[i])
-	meanDi = sumDi / len(Xi)
-	return sumDi, meanDi
-
-
-
-# 8) Calcul des probas conditionnelles jointes (hautes et basses) pour appliquer la maximalite ensuite
+# 7) Calcul des probas conditionnelles jointes (hautes et basses) pour appliquer la maximalite ensuite
 #  Ajout d'un parametre de penalite afin de penaliser notre produit de probas si une des probas rencontrees est nulle.
 def findProbabilityImpreciseKernel(generalLowProbabilities, generalHightProbabilities, generalPreciseProbabilities,tKernelDomain, inputVector,penalite = 0.1):
 
@@ -201,9 +233,6 @@ def findProbabilityImpreciseKernel(generalLowProbabilities, generalHightProbabil
 
 	# Separation des calculs lies a la regression et de la frequence
 	generalLowProbabilitiesWithoutFrequence,generalHightProbabilitiesWithoutFrequence,generalPreciseProbabilitiesWithoutFrequence, frequence_y = separateFrequence(generalLowProbabilities,generalHightProbabilities,generalPreciseProbabilities)
-
-
-
 	# Partie probas precises :
 	# Boucle sur les classes du dictionnaire et leur regression pour chaque var que l'on etudie
 	# but : pouvoir s'en servir quand on doit penaliser notre classifieur imprecis
@@ -356,8 +385,18 @@ def findProbabilityImpreciseKernel(generalLowProbabilities, generalHightProbabil
 	#print(' local low : ',localLowProbabilities,'\nlocal Hight : ',localHightProbabilities,'\n\n')
 	return localLowProbabilities, localHightProbabilities
 
+# Test separation de la frequence :
+#generalLowProbabilities={1:[[.05,.4,.4,.05],[.2,.3,.3,.1],[.2,.3,.3,.1],[0.7]], 2:[[.1,.1,.1,.6],[.1,.1,.1,.6],[.1,.1,.1,.6],[0.3]]}
+#generalHightProbabilities={1:[[.05,.45,.45,.05],[.2,.35,.35,.1],[.2,.35,.35,.1],[0.7]], 2:[[.1,.1,.15,.65],[.1,.1,.15,.65],[.1,.1,.15,.65],[0.3]]}
+#generalPreciseProbabilities={1:[[.05,.45,.45,.05],[.2,.35,.35,.1],[.2,.35,.35,.1],[0.7]], 2:[[.1,.1,.15,.65],[.1,.1,.15,.65],[.1,.1,.15,.65],[0.3]]}
+#tKernelDomain={1:[[0.85,0.95,1.05,1.15],[1.85,1.95,2.05,2.15],[3.85,3.95,4.05,4.15]], 2:[[3.85,3.95,4.05,4.15],[5.85,5.95,6.05,6.15],[7.85,7.95,8.05,8.15]]}
+#inputVector=[0.9,1.9,3.9]
+#localLowProbabilities, localHightProbabilities = findProbabilityImpreciseKernel(generalLowProbabilities, generalHightProbabilities, generalPreciseProbabilities,tKernelDomain, inputVector,penalite = 0.1)
+#print('localLowProbabilities :',localLowProbabilities, 'local hight :',localHightProbabilities)
 
-# 9) Calcul des pobabilites pour une classe donnee en parametre
+
+
+# 8) Calcul des pobabilites pour une classe donnee en parametre
 def calculateProbabilityImpreciseKernel(datasetTotalVar, datasetClass, h, epsilon, nbPointsRegressionMoins1 = 99):
 	if (len(datasetTotalVar) == 0 or len(datasetClass) == 0 or h == 0 or nbPointsRegressionMoins1 < 0):
 		print('Erreur dans un des parametre du calculateProbabilityImpreciseKernel')
@@ -429,7 +468,7 @@ def calculateProbabilityImpreciseKernel(datasetTotalVar, datasetClass, h, epsilo
 	return lowProbabilities, hightProbabilities, preciseProbabilities, generalDomain
 
 
-# 10 ) Fonction qui va etre appelee une fois pour calculer les probas imprecis de chaque var pour chaque classe.
+# 9 ) Fonction qui va etre appelee une fois pour calculer les probas imprecis de chaque var pour chaque classe.
 # La marge est celle passée dans la fonction principale en parametre, elles est en pourcentage.
 def calculateClassProbabilitiesImpreciseKernel(dataset, columnWithClassResponse, margeEpsilon):
 	# Declaration / initialisation des variables
@@ -496,7 +535,7 @@ def calculateClassProbabilitiesImpreciseKernel(dataset, columnWithClassResponse,
 	return lowProbabilities, hightProbabilities, preciseProbabilities, generalDomain
 
 
-# 11) On definit la fonction de prediction de classe avec la maximalite comme critere de comparaison
+# 10) On definit la fonction de prediction de classe avec la maximalite comme critere de comparaison
 def predictImpreciseKernel(lowProbabilities, hightProbabilities, preciseProbabilities, generalDomain, inputVector, margeEpsilon):
 	# Declaration des variables
 	bestLabel = []
@@ -543,7 +582,7 @@ def predictImpreciseKernel(lowProbabilities, hightProbabilities, preciseProbabil
 		return bestLabel
 
 
-# 12) Predictions sur un jeu de test complet :
+# 11) Predictions sur un jeu de test complet :
 def getPredictionsImpreciseKernel(dataset, columnWithClassResponse, testSet, margeEpsilon):
 	# Declaration
 	predictions = []
@@ -562,7 +601,7 @@ def getPredictionsImpreciseKernel(dataset, columnWithClassResponse, testSet, mar
 	return predictions
 
 
-# 13 ) Moyenne des erreurs :
+# 12 ) Moyenne des erreurs :
 def getAccuracyImpreciseKernel(testSet, predictions, columnWithClassResponse,u=0.65):
 	correct = 0
 	for x in range(len(testSet)):
@@ -585,7 +624,7 @@ def getAccuracyImpreciseKernel(testSet, predictions, columnWithClassResponse,u=0
 
 
 
-# 14) Fonction qui permet de voir si les resultats imprecis données contiennent bien la bonne valeur.
+# 13) Fonction qui permet de voir si les resultats imprecis données contiennent bien la bonne valeur.
 # Test sur tous les jeux de donnees.
 # But : avoir  les stats selon les jeux de donnees pour ensuite faire les graphes.
 def convertPreciseAndImprecisePredictionsToStats(predictions,datasets):
@@ -613,7 +652,7 @@ def convertPreciseAndImprecisePredictionsToStats(predictions,datasets):
 	return statsImpreciseResults
 
 
-# 15)Code qui prend en parametre les statistiques (TP) precises et imprecises de tous les datasets pour en faire un graphe
+# 14)Code qui prend en parametre les statistiques (TP) precises et imprecises de tous les datasets pour en faire un graphe
 # Le graphe depend du epsilon passe en parametre, du split dans le dataset et du u (u65, u80)
 
 def statsToGraph(stats, splitRatio, margeEpsilon):
@@ -693,10 +732,11 @@ def statsToGraph(stats, splitRatio, margeEpsilon):
 	plt.clf()
 	return
 
-
 #statsToGraph({'datatest' : [90,30], 'etetetet' : [80,40],'prttetet' : [80,40]},0.5,0.4)
 
-# 16) code pour lancer les fonctions une fois et predire :
+
+
+# 15) code pour lancer les fonctions une fois et predire :
 
 def launch(file,splitRatio,rand,columnWithClassResponse=0,margeEpsilon=0.2):
 	random.seed(rand)
@@ -737,10 +777,7 @@ def launch(file,splitRatio,rand,columnWithClassResponse=0,margeEpsilon=0.2):
 
 	return accuracyPK, accuracyIK65, accuracyIK80, predictionsPK, valeurAttendue, predictionsIK
 
-#main()
-
-
-# 17 ) Fonction qui lance plusieurs fois le test avec des repartitions de donnee differentes
+# 16 ) Fonction qui lance plusieurs fois le test avec des repartitions de donnee differentes
 # Permet d'obtenir des moyennes
 # Attention, ce n'est pas de la cross validation pour autant.
 def launchXTimes(times,margeEpsilon,splitRatio,datasets):
@@ -850,7 +887,7 @@ main()
 
 
 
-# Orga : nb valeur /nb var /nb class
+# Organisation : nb valeur /nb var /nb class
 
 # a : breast 106 /10 /6
 # b : iris 150 /4 /3
