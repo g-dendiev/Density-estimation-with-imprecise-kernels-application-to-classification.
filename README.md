@@ -2,7 +2,9 @@ The goal of this code is to realise an imprecise kernel based on the Triangular 
 
 Your can see the ImpreciseKernelFromScratch3.py in Test repository to see how we did and launch it.
 
-Classes repository contain all implementations of kernels (triangular and Epanechikov).
+But don't forget to dowload some datasets, we did so on UCI site : https://archive.ics.uci.edu/ml/datasets.html
+
+Classes repository contains all implementations of kernels (triangular and Epanechikov).
 
 
 ###########################################################################################
