@@ -15,7 +15,11 @@ If you want to test on your own, you can follow those steps :
         -> Note : I used the PyCharm IDE to do the project on mac OS.
                   You may change some folders to the datasets to make it work.
 
-Note : This manipulation will lead to use all pairs of parameters made with epsilon in [10%, 20%, 40%] and a separation of your datas in [ 30%, 50%, 75%]. The bases datasets are : diabetes.data.csv, iris.data.csv and wine.data.csv. So that it won't take too much time to compute it all.
+Notes :
+  - This manipulation will lead to use all pairs of parameters made with epsilon in [10%, 20%, 40%] and a separation of your datas in [ 30%, 50%, 75%]. The bases datasets are : diabetes.data.csv, iris.data.csv and wine.data.csv. So that it won't take too much time to compute it all.
+  - Nearly all functions are made in the same script. If there are not, the Classes repository contains all implementations of kernels (triangular and Epanechikov). You can see it if you want to.
+  - The main() function at the end is defined to call one function that will call all the others that will in turn call all over and so on.
+
 
 
 # Results :
@@ -48,7 +52,7 @@ Organisation :
 Feel free to :
 
   - test others datasets in '.csv', essentially numerics datasets. To do so, don't forget to modify the "launchXTimes" function. You will need to modify the part in which the class (or response) column is set (must be 0 or 1 !!!).
-  - test others epsilons or splitRatio
+  - test others epsilons or splitRatio in the main() function.
 
 
 # Go further
@@ -56,9 +60,6 @@ Feel free to :
 To understand how this works, see the article : LINK COMMING.
 
 There is a little definition of each fonction used in ImpreciseKernelFromScratch3.py before the fonciton is implemented. Not for all but there is sometimes some unitary tests.
-
-
-In the Classes repository contains all implementations of kernels (triangular and Epanechikov). You can see it if you want to.
 
 # Subjects :
 ## Autumn 2016 (6 months):
