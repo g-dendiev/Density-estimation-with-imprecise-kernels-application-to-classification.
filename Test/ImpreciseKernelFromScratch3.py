@@ -881,7 +881,7 @@ def launchXTimes(times,margeEpsilon,splitRatio,datasets):
 def main():
 	for margeEpsilon in [0.1,0.2,0.4]:
 		for splitRatio in [0.3,0.5,0.75]: # Calculer le ratio d'imprécis pour pouvoir mettre en lien avec notre tableau !
-			launchXTimes(10,margeEpsilon,splitRatio,['BreastTissue_nettoye.data.csv','iris.data.csv','wine.data.csv','automobile.data.csv','seeds_dataset.data.csv','glass_clean.data.csv','forestType.data.csv','dermatology_dataset.data.csv','diabetes.data.csv','segment.data.csv'])
+			launchXTimes(10,margeEpsilon,splitRatio,['iris.data.csv','wine.data.csv','diabetes.data.csv'])# 'BreastTissue_nettoye.data.csv','automobile.data.csv','seeds_dataset.data.csv','glass_clean.data.csv','forestType.data.csv','dermatology_dataset.data.csv','segment.data.csv'
 
 main()
 
