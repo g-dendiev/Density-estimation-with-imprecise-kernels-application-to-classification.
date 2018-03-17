@@ -47,7 +47,7 @@ Organisation :
 
 Feel free to :
 
-  - test others datasets in '.csv', essentially numerics datasets.
+  - test others datasets in '.csv', essentially numerics datasets. To do so, don't forget to modify the "launchXTimes" function. You will need to modify the part in which the class (or response) column is set (must be 0 or 1 !!!).
   - test others epsilons or splitRatio
 
 
