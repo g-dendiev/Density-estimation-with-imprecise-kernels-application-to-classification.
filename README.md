@@ -1,6 +1,12 @@
+# Aim
+
 The goal of this code is to realise an imprecise kernel based on the Triangular Kernel. This was in two 6-month's projects made à the "Universitée de Technologie de Compiègne", in France. You can find the two subjects in french at the end of the README.
 
+# Article (link comming)
+
 This code is the test part of a publication, named "Dendity estimation with imprecise kernels : application to classification".
+
+# Run
 
 If you want to test on your own, you can follow those steps :
 
@@ -8,34 +14,41 @@ If you want to test on your own, you can follow those steps :
   - Go to the Test repository and launch the ImpreciseKernelFromScratch3.py
         -> Note : I used the PyCharm IDE to do the project on mac OS.
                   You may change some folders to the datasets to make it work.
-              
-Results :
+
+Note : This manipulation will lead to use all pairs of parameters made with epsilon in [10%, 20%, 40%] and a separation of your datas in [ 30%, 50%, 75%]. The bases datasets are : diabetes.data.csv, iris.data.csv and wine.data.csv. So that it won't take too much time to compute it all.
+
+
+# Results :
 
   - You will get somes results displayed in your IDE console
   - Some graphics will be saved with the date and the some parameters (epsilon, splitRatio,...), in the working directory.
   - Also all statistical and imprecise classification results (in results.txt, by concatenation, so that you can keep the older results).
 
-Note : This manipulation will lead to use all pairs of parameters made with epsilon in [10%, 20%, 40%] and a separation of your datas in [ 30%, 50%, 75%]. The bases datasets are : diabetes.data.csv, iris.data.csv and wine.data.csv. So that it won't take too much time to compute it all.
+
+Note : The graphics you have in the test repository have been made with those datasets extracts from the UCI site : https://archive.ics.uci.edu/ml/datasets.html :
+ 
+Organisation : 
+- name : nb values /nb variables /nb class
+- a : breast 106 /10 /6
+- b : iris 150 /4 /3
+- c : wine 178 /13 /3
+- d : auto 205 /26 /7
+- e : seed 210 /7 /3
+- f : glass 214 / 9 / 7
+- g : forest 325 /27 /4
+- h : derma 366 /34 /6
+- i : diabete 769/8/2
+- j : segment 2310 /19 /7
+
+# Parameters
 
 Feel free to :
 
   - test others datasets in '.csv', essentially numerics datasets.
   - test others epsilons or splitRatio
 
-The graphics you have in the test repository have been made with those datasets extracts from the UCI site : https://archive.ics.uci.edu/ml/datasets.html :
- 
-# Organisation : nb values /nb variables /nb class
 
-# a : breast 106 /10 /6
-# b : iris 150 /4 /3
-# c : wine 178 /13 /3
-# d : auto 205 /26 /7
-# e : seed 210 /7 /3
-# f : glass 214 / 9 / 7
-# g : forest 325 /27 /4
-# h : derma 366 /34 /6
-# i : diabete 769/8/2
-# j : segment 2310 /19 /7
+# Go further
 
 To understand how this works, see the article : LINK COMMING.
 
