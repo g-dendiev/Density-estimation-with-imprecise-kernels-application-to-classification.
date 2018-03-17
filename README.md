@@ -11,7 +11,7 @@ This code is the test part of a publication, named "Dendity estimation with impr
 If you want to test on your own, you can follow those steps :
 
   - Donwload all the all project
-  - Go to the Test repository and launch the ImpreciseKernelFromScratch3.py
+  - Go to the Test repository and launch the ImpreciseKernelFromScratch3.py\n
   ** Note : I used the PyCharm IDE to do the project on mac OS.
                   You may change some folders to the datasets to make it work.
 
@@ -25,7 +25,7 @@ Notes :
 # Results :
 
   - You will get somes results displayed in your IDE console
-  - Some graphics will be saved with the date and the some parameters (epsilon, splitRatio,...), in the working directory.
+  - Some graphics will be saved with the date and the some parameters (epsilon, splitRatio,...), in the working directory.\n
   ** names will be like : 
             "graph with epsilon = 0.4 and split ratio = 0.3time.struct_time(tm_year=2018, tm_mon=2, tm_mday=27, tm_hour=6, tm_min=21, tm_sec=5, tm_wday=1, tm_yday=58, tm_isdst=0).pdf"
   - Also all statistical and imprecise classification results (in results.txt, by concatenation, so that you can keep the older results).
