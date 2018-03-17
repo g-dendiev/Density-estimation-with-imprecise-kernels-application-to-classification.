@@ -1,4 +1,4 @@
-# Aim
+# Purpose
 
 The goal of this code is to realise an imprecise kernel based on the Triangular Kernel. This was in two 6-month's projects made à the "Universitée de Technologie de Compiègne", in France. You can find the two subjects in french at the end of the README.
 
