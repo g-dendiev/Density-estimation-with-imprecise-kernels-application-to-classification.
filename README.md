@@ -12,7 +12,7 @@ If you want to test on your own, you can follow those steps :
 
   - Donwload all the all project
   - Go to the Test repository and launch the ImpreciseKernelFromScratch3.py
-        -> Note : I used the PyCharm IDE to do the project on mac OS.
+        - Note : I used the PyCharm IDE to do the project on mac OS.
                   You may change some folders to the datasets to make it work.
 
 Notes :
@@ -26,10 +26,10 @@ Notes :
 
   - You will get somes results displayed in your IDE console
   - Some graphics will be saved with the date and the some parameters (epsilon, splitRatio,...), in the working directory.
-        -> names will be like : 
+        - names will be like : 
             "graph with epsilon = 0.4 and split ratio = 0.3time.struct_time(tm_year=2018, tm_mon=2, tm_mday=27, tm_hour=6, tm_min=21, tm_sec=5, tm_wday=1, tm_yday=58, tm_isdst=0).pdf"
   - Also all statistical and imprecise classification results (in results.txt, by concatenation, so that you can keep the older results).
-        -> See the results.txt in Test repository to see an example.
+        - See the results.txt in Test repository to see an example.
 
 
 Note : The graphics, named like graph with epsilon = 0.4 and split ratio = 0.3time.struct_time(tm_year=2018, tm_mon=2, tm_mday=27, tm_hour=6, tm_min=21, tm_sec=5, tm_wday=1, tm_yday=58, tm_isdst=0).pdf, you have in the test repository have been made with those datasets extracts from the UCI site : https://archive.ics.uci.edu/ml/datasets.html :
