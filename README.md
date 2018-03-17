@@ -57,8 +57,8 @@ There is a little definition of each fonction used in ImpreciseKernelFromScratch
 
 In the Classes repository contains all implementations of kernels (triangular and Epanechikov). You can see it if you want to.
 
-###########################################################################################
-
+# Subjects :
+## Autumn 2016 (6 months):
 
 Sujet Automne 2016 :
 
@@ -85,7 +85,7 @@ De plus, les candidats pourront:
 * Etudier des aspects plus théoriques de la problématique
 
 
-###########################################################################################
+## Autumn 2017 until the end of winter (8 months) :
 
 Sujet Automne 2017 :
 
